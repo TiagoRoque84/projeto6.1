@@ -1,3 +1,5 @@
+# pdf_reports.py
+
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -15,6 +17,12 @@ def _s(v):
 
 def P(v): 
     return Paragraph(_s(v), N)
+
+def format_date(d):
+    """Nova função para formatar datas para o padrão DD/MM/YYYY."""
+    if d:
+        return d.strftime('%d/%m/%Y')
+    return ""
 
 def _abs_upload_path(app, rel):
     """Resolve caminho absoluto de algo salvo em uploads/..."""
@@ -51,8 +59,8 @@ def employee_pdf(buffer, app, e):
         ["Nome", P(e.nome), "Empresa", P(e.company.razao_social if e.company else "")],
         ["Função", P(e.funcao.nome if e.funcao else ""), "Ativo", P("Sim" if e.ativo else "Não")],
         ["CPF", P(e.cpf), "RG", P(e.rg)],
-        ["Nascimento", P(e.data_nascimento), "Gênero", P(e.genero)],
-        ["Estado civil", P(e.estado_civil), "Admissão", P(e.data_admissao)],
+        ["Nascimento", P(format_date(e.data_nascimento)), "Gênero", P(e.genero)],
+        ["Estado civil", P(e.estado_civil), "Admissão", P(format_date(e.data_admissao))],
         ["Salário (R$)", P(e.salario), "Jornada", P(e.jornada)],
         ["Telefone", P(e.fone), "Celular", P(e.celular)],
         ["E-mail", P(e.email), "", ""],
@@ -62,9 +70,9 @@ def employee_pdf(buffer, app, e):
         ["Bairro/Cidade/UF", P(f"{_s(e.bairro)} / {_s(e.cidade)} / {_s(e.uf)}"), "", ""],
         ["Banco", P(e.banco), "Agência/Conta", P(f"{_s(e.agencia)} / {_s(e.conta)}")],
         ["Tipo de conta", P(e.tipo_conta), "PIX", P(f"{_s(e.pix_tipo)}: {_s(e.pix_chave)}")],
-        ["ASO", P(e.aso_tipo), "Validade", P(e.aso_validade)],
-        ["CNH", P(e.cnh), "CNH Validade", P(e.cnh_validade)],
-        ["Toxicológico", "", "Validade", P(e.exame_toxico_validade)],
+        ["ASO", P(e.aso_tipo), "Validade", P(format_date(e.aso_validade))],
+        ["CNH", P(e.cnh), "CNH Validade", P(format_date(e.cnh_validade))],
+        ["Toxicológico", "", "Validade", P(format_date(e.exame_toxico_validade))],
     ]
     table = Table(data, colWidths=[3.2*cm,7.8*cm,3.2*cm,3.8*cm])
     table.setStyle(TableStyle([
@@ -72,7 +80,7 @@ def employee_pdf(buffer, app, e):
         ('FONTSIZE',(0,0),(-1,-1),9),
         ('VALIGN',(0,0),(-1,-1),'TOP')
     ]))
-    elems.extend([table, Spacer(1,0.5*cm), Paragraph(f"Gerado em {_date.today().strftime('%d/%m/%Y')}", N)])
+    elems.extend([table, Spacer(1,0.5*cm), Paragraph(f"Gerado em {format_date(_date.today())}", N)])
     doc.build(elems)
 
 # -------------------- EMPRESA --------------------
@@ -100,7 +108,7 @@ def company_pdf(buffer, app, c):
         ('FONTSIZE',(0,0),(-1,-1),10),
         ('VALIGN',(0,0),(-1,-1),'TOP')
     ]))
-    elems.extend([table, Spacer(1,0.5*cm), Paragraph(f"Gerado em {_date.today().strftime('%d/%m/%Y')}", N)])
+    elems.extend([table, Spacer(1,0.5*cm), Paragraph(f"Gerado em {format_date(_date.today())}", N)])
     doc.build(elems)
 
 # -------------------- LISTA DE DOCUMENTOS --------------------
@@ -129,8 +137,8 @@ def documents_pdf(buffer, app, docs, titulo="Documentos"):
             P(d.tipo.nome if getattr(d,'tipo',None) else ""),
             P(getattr(d,'descricao',"")),
             P(getattr(d,'numero',"")),
-            P(getattr(d,'data_expedicao',"")),
-            P(getattr(d,'data_vencimento',"")),
+            P(format_date(getattr(d,'data_expedicao',None))),
+            P(format_date(getattr(d,'data_vencimento',None))),
             P(dias),
             P(status or getattr(d,'status','')),
         ])
@@ -169,7 +177,7 @@ def toxicos_pdf(buffer, app, items, titulo="Exame Toxicológico"):
         data.append([
             P(e.nome),
             P(e.company.razao_social if getattr(e,'company',None) else ""),
-            P(val),
+            P(format_date(val)),
             P(dias),
             P(status),
         ])
@@ -180,5 +188,5 @@ def toxicos_pdf(buffer, app, items, titulo="Exame Toxicológico"):
         ('FONTSIZE',(0,0),(-1,-1),9),
         ('VALIGN',(0,0),(-1,-1),'TOP')
     ]))
-    elems.extend([table, Spacer(1,0.4*cm), Paragraph(f"Gerado em {_date.today().strftime('%d/%m/%Y')}", N)])
+    elems.extend([table, Spacer(1,0.4*cm), Paragraph(f"Gerado em {format_date(_date.today())}", N)])
     doc.build(elems)

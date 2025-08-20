@@ -1,19 +1,69 @@
 {% extends 'base.html' %}
 {% block content %}
-<h3>PDV / Caixa rápido</h3>
+<h3>Caixa / Movimentos</h3>
 <form method="post" class="row g-3">
   {{ form.hidden_tag() }}
-  <div class="col-md-3">{{ form.tipo.label }} {{ form.tipo(class_='form-select') }}</div>
-  <div class="col-md-3">{{ form.valor.label }} {{ form.valor(class_='form-control', step='0.01') }}</div>
-  <div class="col-md-3">{{ form.pagamento.label }} {{ form.pagamento(class_='form-select') }}</div>
-  <div class="col-md-3">{{ form.ticket_ref.label }} {{ form.ticket_ref(class_='form-control') }}</div>
-  <div class="col-md-6">{{ form.cliente.label }} {{ form.cliente(class_='form-control') }}</div>
-  <div class="col-md-12">{{ form.descricao.label }} {{ form.descricao(class_='form-control') }}</div>
+
+  <div class="col-md-4">
+    {{ form.tipo.label(class_='form-label') }}
+    {{ form.tipo(class_='form-select', id='tipo_movimento') }}
+  </div>
+  <div class="col-md-4">
+    {{ form.valor.label(class_='form-label') }}
+    {{ form.valor(class_='form-control', step='0.01') }}
+  </div>
+  <div class="col-md-4">
+    {{ form.pagamento.label(class_='form-label') }}
+    {{ form.pagamento(class_='form-select', id='pagamento') }}
+  </div>
+
+  <div id="weighing-fields" class="row g-3 m-0 p-0">
+    <div class="col-12 mt-3">
+      {{ form.customer_id.label(class_='form-label') }}
+      {{ form.customer_id(class_='form-select') }}
+    </div>
+    <div class="col-md-4">{{ form.ticket_ref.label(class_='form-label') }} {{ form.ticket_ref(class_='form-control') }}</div>
+    <div class="col-md-4">{{ form.placa.label(class_='form-label') }} {{ form.placa(class_='form-control') }}</div>
+    <div class="col-md-4">{{ form.material.label(class_='form-label') }} {{ form.material(class_='form-control') }}</div>
+    <div class="col-md-4">{{ form.peso.label(class_='form-label') }} {{ form.peso(class_='form-control') }}</div>
+  </div>
+  
+  <div class="col-md-12">
+    {{ form.descricao.label(class_='form-label') }}
+    {{ form.descricao(class_='form-control') }}
+  </div>
+  
   <div class="col-12 d-flex gap-2">
     {{ form.submit(class_='btn btn-success') }}
     {{ form.submit_no_print(class_='btn btn-outline-secondary') }}
-    <a class="btn btn-outline-primary" href="{{ url_for('pdv.pdv_list') }}">Movimentos</a>
-    <a class="btn btn-outline-dark" href="{{ url_for('pdv.test_print') }}">Teste impressão</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('pdv.pdv_list') }}">Ver Movimentos</a>
+    <a class="btn btn-outline-dark" href="{{ url_for('pdv.test_print') }}">Teste de Impressão</a>
   </div>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tipoSelect = document.getElementById('tipo_movimento');
+  const weighingFields = document.getElementById('weighing-fields');
+  const pagamentoSelect = document.getElementById('pagamento');
+
+  function toggleFields() {
+    const isVenda = tipoSelect.value === 'VENDA';
+    weighingFields.style.display = isVenda ? 'flex' : 'none';
+    
+    // Mostra/esconde a opção "Na Conta"
+    const contaOption = pagamentoSelect.querySelector('option[value="CONTA"]');
+    if (contaOption) {
+      contaOption.disabled = !isVenda;
+    }
+    // Se a opção desabilitada estiver selecionada, volte para a primeira
+    if (!isVenda && pagamentoSelect.value === 'CONTA') {
+      pagamentoSelect.value = 'DINHEIRO';
+    }
+  }
+
+  tipoSelect.addEventListener('change', toggleFields);
+  toggleFields(); // Executa ao carregar a página
+});
+</script>
 {% endblock %}

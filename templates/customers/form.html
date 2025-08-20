@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ title }}</h3>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div class="row">
+    <div class="col-md-3 mb-3">{{ form.tipo_pessoa.label }} {{ form.tipo_pessoa(class_='form-select', id='tipo_pessoa') }}</div>
+  </div>
+  <div class="row">
+    <div class="col-md-8 mb-3">{{ form.nome_razao_social.label }} {{ form.nome_razao_social(class_='form-control') }}</div>
+    <div class="col-md-4 mb-3">{{ form.cpf_cnpj.label }} {{ form.cpf_cnpj(class_='form-control', id='cpf_cnpj') }}</div>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">{{ form.telefone.label }} {{ form.telefone(class_='form-control') }}</div>
+    <div class="col-md-6 mb-3">{{ form.email.label }} {{ form.email(class_='form-control') }}</div>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="col-md-3 mb-3">{{ form.cep.label }} {{ form.cep(class_='form-control', id='cep') }}</div>
+    <div class="col-md-7 mb-3">{{ form.logradouro.label }} {{ form.logradouro(class_='form-control') }}</div>
+    <div class="col-md-2 mb-3">{{ form.numero.label }} {{ form.numero(class_='form-control') }}</div>
+    <div class="col-md-4 mb-3">{{ form.complemento.label }} {{ form.complemento(class_='form-control') }}</div>
+    <div class="col-md-4 mb-3">{{ form.bairro.label }} {{ form.bairro(class_='form-control') }}</div>
+    <div class="col-md-3 mb-3">{{ form.cidade.label }} {{ form.cidade(class_='form-control') }}</div>
+    <div class="col-md-1 mb-3">{{ form.uf.label }} {{ form.uf(class_='form-control') }}</div>
+  </div>
+  <div class="form-check mb-3">
+    {{ form.ativo(class_='form-check-input') }}
+    {{ form.ativo.label(class_='form-check-label') }}
+  </div>
+
+  <button class="btn btn-primary">Salvar</button>
+  <a href="{{ url_for('customers.list') }}" class="btn btn-outline-secondary">Cancelar</a>
+</form>
+
+<script>
+// Funções de Máscara
+function maskCPF(v) {
+  v = v.replace(/\D/g, '').slice(0, 11);
+  v = v.replace(/(\d{3})(\d)/, '$1.$2');
+  v = v.replace(/(\d{3})(\d)/, '$1.$2');
+  v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  return v;
+}
+
+function maskCNPJ(v) {
+  v = v.replace(/\D/g, '').slice(0, 14);
+  v = v.replace(/^(\d{2})(\d)/, '$1.$2');
+  v = v.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+  v = v.replace(/\.(\d{3})(\d)/, '.$1/$2');
+  v = v.replace(/(\d{4})(\d)/, '$1-$2');
+  return v;
+}
+
+// Funções de Busca em API
+async function buscarCEP() {
+  const cep = document.getElementById('cep').value.replace(/\D/g, '');
+  if (cep.length < 8) return;
+  try {
+    const r = await fetch(`/rh/api/cep/${cep}`);
+    const j = await r.json();
+    if (!j.erro) {
+      document.querySelector('[name=logradouro]').value = j.logradouro || '';
+      document.querySelector('[name=bairro]').value = j.bairro || '';
+      document.querySelector('[name=cidade]').value = j.localidade || '';
+      document.querySelector('[name=uf]').value = j.uf || '';
+    }
+  } catch(e) { console.error("Falha ao buscar CEP", e); }
+}
+
+async function buscarCNPJ() {
+  const cnpj = document.getElementById('cpf_cnpj').value.replace(/\D/g, '');
+  if (cnpj.length < 14) return;
+  try {
+    const r = await fetch(`/empresas/api/cnpj/${cnpj}`);
+    const j = await r.json();
+    if (j && !j.erro) {
+        document.querySelector('[name=nome_razao_social]').value = j.razao_social || '';
+        document.querySelector('[name=cep]').value = j.cep || '';
+        document.querySelector('[name=logradouro]').value = j.logradouro || '';
+        document.querySelector('[name=bairro]').value = j.bairro || '';
+        document.querySelector('[name=cidade]').value = j.cidade || '';
+        document.querySelector('[name=uf]').value = j.uf || '';
+        document.querySelector('[name=numero]').value = j.numero || '';
+        document.querySelector('[name=complemento]').value = j.complemento || '';
+    } else {
+        alert('CNPJ não encontrado na API.');
+    }
+  } catch(e) { console.error("Falha ao buscar CNPJ", e); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const tipoPessoaSelect = document.getElementById('tipo_pessoa');
+  const cpfCnpjInput = document.getElementById('cpf_cnpj');
+  const cpfCnpjLabel = document.querySelector('label[for=cpf_cnpj]');
+  const cepInput = document.getElementById('cep');
+
+  function updateFieldBehavior(isChange) {
+    const tipo = tipoPessoaSelect.value;
+    cpfCnpjInput.removeEventListener('blur', buscarCNPJ);
+    
+    if (tipo === 'PF') {
+      cpfCnpjLabel.textContent = 'CPF';
+      cpfCnpjInput.placeholder = '000.000.000-00';
+      cpfCnpjInput.oninput = (e) => { e.target.value = maskCPF(e.target.value); };
+    } else { // PJ
+      cpfCnpjLabel.textContent = 'CNPJ';
+      cpfCnpjInput.placeholder = '00.000.000/0000-00';
+      cpfCnpjInput.oninput = (e) => { e.target.value = maskCNPJ(e.target.value); };
+      cpfCnpjInput.addEventListener('blur', buscarCNPJ);
+    }
+    
+    // CORREÇÃO: Limpa o campo apenas se o evento for uma MUDANÇA feita pelo usuário
+    if (isChange) {
+        cpfCnpjInput.value = '';
+    }
+    
+    // Aplica a máscara no valor já existente (útil para a tela de edição)
+    cpfCnpjInput.dispatchEvent(new Event('input'));
+  }
+
+  // Listener para quando o usuário MUDA o valor
+  tipoPessoaSelect.addEventListener('change', () => updateFieldBehavior(true));
+  
+  // Listener para a busca de CEP
+  cepInput.addEventListener('blur', buscarCEP);
+
+  // Executa a configuração inicial da página sem limpar o campo
+  updateFieldBehavior(false);
+});
+</script>
+{% endblock %}

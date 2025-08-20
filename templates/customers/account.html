@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3>Extrato do Cliente: {{ customer.nome_razao_social }}</h3>
+<div class="mb-3">
+    <strong>Saldo Devedor: </strong><span class="badge bg-danger fs-6">R$ {{ "%.2f"|format(total_due) }}</span>
+</div>
+
+<hr>
+
+<h4><i class="bi bi-cash-coin"></i> Lançar Pagamento</h4>
+{% if pending_movements %}
+<div class="card bg-light mb-4">
+    <div class="card-body">
+        <form action="{{ url_for('customers.pay', customer_id=customer.id) }}" method="post" id="payment-form">
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;"><input type="checkbox" id="select-all"></th>
+                            <th>Data</th>
+                            <th>Ticket</th>
+                            <th>Placa</th>
+                            <th>Material</th>
+                            <th class="text-end">Peso (kg)</th>
+                            <th class="text-end">Valor (R$)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in pending_movements %}
+                        <tr>
+                            <td><input type="checkbox" name="movement_ids" value="{{ item.id }}" class="movement-checkbox"></td>
+                            <td>{{ item.created_at.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ item.ticket_ref or '-' }}</td>
+                            <td>{{ item.placa or '-' }}</td>
+                            <td>{{ item.material or '-' }}</td>
+                            <td class="text-end">{{ "%.2f"|format(item.peso|float) if item.peso else '-' }}</td>
+                            <td class="text-end">{{ "%.2f"|format(item.valor|float) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mt-3 p-2 border-top">
+                <div>
+                    <strong>Total Selecionado: </strong>
+                    <span class="badge bg-success fs-6" id="total-selected">R$ 0.00</span>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <label for="payment_method" class="form-label mb-0">Forma de Pagamento:</label>
+                    <select name="payment_method" id="payment_method" class="form-select" style="width: auto;">
+                        <option value="DINHEIRO">Dinheiro</option>
+                        <option value="PIX">Pix</option>
+                        <option value="CARTAO">Cartão</option>
+                        <option value="BAIXA">Baixa (Outro Local)</option> </select>
+                    <button type="submit" class="btn btn-primary">Registrar Pagamento</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-success">
+    Nenhuma pendência encontrada para este cliente.
+</div>
+{% endif %}
+
+
+<h4>Histórico de Movimentos</h4>
+<table class="table table-sm table-striped">
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Descrição</th>
+            <th class="text-end">Valor (R$)</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in paid_movements %}
+        <tr class="{{ 'table-success' if item.tipo == 'PAGAMENTO' else '' }}">
+            <td>{{ item.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td>{{ item.tipo }}</td>
+            <td>
+                {% if item.tipo == 'VENDA' %}
+                    Ticket: {{ item.ticket_ref or '-' }}, Placa: {{ item.placa or '-' }}
+                {% else %}
+                    {{ item.descricao or '-' }}
+                {% endif %}
+            </td>
+            <td class="text-end">
+                {% if item.tipo == 'PAGAMENTO' %}
+                    <span class="fw-bold">+ R$ {{ "%.2f"|format(item.valor|float) }}</span>
+                {% else %}
+                    - R$ {{ "%.2f"|format(item.valor|float) }}
+                {% endif %}
+            </td>
+            <td><span class="badge bg-secondary">{{ item.status }}</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('customers.list') }}" class="btn btn-outline-secondary mt-3">Voltar para a Lista de Clientes</a>
+
+<script>
+// ... (script existente, sem alterações)
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('select-all');
+    const movementCheckboxes = document.querySelectorAll('.movement-checkbox');
+    const totalSelectedSpan = document.getElementById('total-selected');
+    const paymentForm = document.getElementById('payment-form');
+
+    function updateTotal() {
+        let total = 0;
+        movementCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                const row = checkbox.closest('tr');
+                const valueCell = row.cells[6];
+                total += parseFloat(valueCell.textContent.replace(',', '.'));
+            }
+        });
+        totalSelectedSpan.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    }
+
+    selectAllCheckbox.addEventListener('change', function() {
+        movementCheckboxes.forEach(checkbox => { checkbox.checked = selectAllCheckbox.checked; });
+        updateTotal();
+    });
+
+    movementCheckboxes.forEach(checkbox => { checkbox.addEventListener('change', updateTotal); });
+    
+    paymentForm.addEventListener('submit', function(e) {
+        let checkedCount = 0;
+        movementCheckboxes.forEach(checkbox => { if (checkbox.checked) checkedCount++; });
+        if (checkedCount === 0) {
+            e.preventDefault();
+            alert('Por favor, selecione pelo menos uma pesagem para pagar.');
+        }
+    });
+    updateTotal();
+});
+</script>
+{% endblock %}

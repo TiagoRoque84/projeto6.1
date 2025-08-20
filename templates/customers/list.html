@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <form class="d-flex gap-2">
+    <input name="q" value="{{ q }}" class="form-control" placeholder="Buscar por nome ou CPF/CNPJ...">
+    <button class="btn btn-outline-secondary">Filtrar</button>
+  </form>
+  <a class="btn btn-success" href="{{ url_for('customers.new') }}">Novo Cliente</a>
+</div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nome / Razão Social</th>
+      <th>CPF / CNPJ</th>
+      <th>Telefone</th>
+      <th>Status</th>
+      <th style="width:200px"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in items %}
+    <tr>
+      <td>{{ c.nome_razao_social }}</td>
+      <td>{{ c.cpf_cnpj }}</td>
+      <td>{{ c.telefone }}</td>
+      <td>{{ 'Ativo' if c.ativo else 'Inativo' }}</td>
+      <td class="text-end d-flex gap-2 justify-content-end">
+        <a class="btn btn-sm btn-info" href="{{ url_for('customers.account', customer_id=c.id) }}">Ver Conta</a>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('customers.edit', customer_id=c.id) }}">Editar</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

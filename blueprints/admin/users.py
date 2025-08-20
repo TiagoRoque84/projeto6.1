@@ -1,9 +1,10 @@
-
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
 from extensions import db
 from models import User
 from utils import admin_required
+# Importa a função para criptografar a senha
+from werkzeug.security import generate_password_hash
 
 admin_users_bp = Blueprint("admin_users", __name__, template_folder='../../templates/admin')
 
@@ -35,7 +36,11 @@ def new():
         if User.query.filter_by(username=username).first():
             flash("Usuário já existe.", "danger")
             return redirect(url_for("admin_users.new"))
-        u = User(username=username, password=password, nome_completo=nome, role=role, active=active)
+        
+        # --- CORREÇÃO AQUI: Criptografa a senha antes de salvar ---
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+        u = User(username=username, password=hashed_password, nome_completo=nome, role=role, active=active)
+        
         db.session.add(u); db.session.commit()
         flash("Usuário criado.", "success")
         return redirect(url_for("admin_users.list"))
@@ -48,8 +53,12 @@ def edit(uid):
     u = User.query.get_or_404(uid)
     if request.method == "POST":
         u.username = request.form.get("username", u.username).strip()
-        if request.form.get("password"):
-            u.password = request.form.get("password")
+        
+        # --- CORREÇÃO AQUI: Criptografa a nova senha, se for fornecida ---
+        new_password = request.form.get("password")
+        if new_password:
+            u.password = generate_password_hash(new_password, method='pbkdf2:sha256')
+            
         u.nome_completo = request.form.get("nome_completo", u.nome_completo).strip()
         u.role = request.form.get("role", u.role)
         u.active = bool(request.form.get("active"))

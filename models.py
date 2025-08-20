@@ -1,4 +1,3 @@
-
 from datetime import datetime, date
 from extensions import db
 from flask_login import UserMixin
@@ -79,11 +78,8 @@ class Employee(db.Model):
     cnh_validade = db.Column(db.Date)
     exame_toxico_validade = db.Column(db.Date)
     foto_path = db.Column(db.String(300))
-
-    # Novos campos
-    filho_menor14 = db.Column(db.Boolean)                # True/False
-    escolaridade = db.Column(db.String(40))              # ex.: Médio completo
-
+    filho_menor14 = db.Column(db.Boolean)
+    escolaridade = db.Column(db.String(40))
     company = db.relationship("Company")
     funcao = db.relationship("Funcao")
 
@@ -112,7 +108,6 @@ class Document(db.Model):
     data_vencimento = db.Column(db.Date)
     arquivo_path = db.Column(db.String(300))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     company = db.relationship("Company")
     tipo = db.relationship("DocumentType")
 
@@ -134,5 +129,47 @@ class EmployeeDocument(db.Model):
     descricao = db.Column(db.String(200))
     arquivo_path = db.Column(db.String(300))
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     employee = db.relationship("Employee", backref="documentos")
+
+class CashMovement(db.Model):
+    __tablename__ = "cash_movement"
+    id = db.Column(db.Integer, primary_key=True)
+    tipo = db.Column(db.String(20), nullable=False)  # VENDA, SANGRIA, RETIRADA, PAGAMENTO
+    valor = db.Column(db.Numeric(10,2), nullable=False)
+    pagamento = db.Column(db.String(20), nullable=False)  # DINHEIRO, PIX, CARTAO, CONTA
+    descricao = db.Column(db.String(255))
+    ticket_ref = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
+
+    # --- Novos campos para Pesagem ---
+    placa = db.Column(db.String(10))
+    material = db.Column(db.String(100))
+    peso = db.Column(db.Numeric(10, 3)) # Ex: 10.500 Toneladas
+    
+    # --- Controle da Conta Corrente ---
+    status = db.Column(db.String(20), default='Pendente') # Pendente, Pago
+    pagamento_id = db.Column(db.Integer, db.ForeignKey('cash_movement.id'), nullable=True)
+    
+    # Relacionamento para ver os itens que um pagamento quitou
+    pagamentos_quitados = db.relationship('CashMovement', backref=db.backref('pagamento_de', remote_side=[id]))
+
+
+class Customer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    tipo_pessoa = db.Column(db.String(2), default='PF')
+    nome_razao_social = db.Column(db.String(200), nullable=False)
+    cpf_cnpj = db.Column(db.String(20), unique=True)
+    telefone = db.Column(db.String(30))
+    email = db.Column(db.String(150))
+    cep = db.Column(db.String(9))
+    logradouro = db.Column(db.String(200))
+    numero = db.Column(db.String(20))
+    complemento = db.Column(db.String(100))
+    bairro = db.Column(db.String(100))
+    cidade = db.Column(db.String(100))
+    uf = db.Column(db.String(2))
+    ativo = db.Column(db.Boolean, default=True)
+
+    movimentos = db.relationship('CashMovement', backref='customer', lazy=True, foreign_keys=[CashMovement.customer_id])

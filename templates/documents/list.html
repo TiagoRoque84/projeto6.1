@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-end mb-3">
@@ -52,7 +51,11 @@
       <td>{{ d.data_expedicao }}</td>
       <td>{{ d.data_vencimento }}</td>
       <td>{{ d.status }}</td>
-      <td class="text-end">
+      <td class="text-end d-flex gap-2 justify-content-end">
+        {# O link só aparece se existir um arquivo anexado #}
+        {% if d.arquivo_path %}
+          <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('uploads.serve_upload', filename=(d.arquivo_path|norm_upload)) }}" target="_blank">Visualizar</a>
+        {% endif %}
         <a class="btn btn-sm btn-outline-primary" href="{{ url_for('documents.edit', doc_id=d.id) }}">Editar</a>
       </td>
     </tr>

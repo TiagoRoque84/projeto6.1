@@ -1,15 +1,107 @@
-
 {% extends 'base.html' %}
 {% block content %}
-<div class="alert alert-success">Bem-vindo!</div>
-<div class="row g-3">
-  <div class="col-md-3"><div class="card border-danger"><div class="card-body"><div class="text-muted">Docs Vencidos</div><div class="display-6">{{ docs_venc }}</div></div></div></div>
-  <div class="col-md-3"><div class="card border-warning"><div class="card-body"><div class="text-muted">Docs a Vencer (30d)</div><div class="display-6">{{ docs_avencer }}</div></div></div></div>
-  <div class="col-md-3"><div class="card border-danger"><div class="card-body"><div class="text-muted">ASO Vencidos</div><div class="display-6">{{ aso_venc }}</div></div></div></div>
-  <div class="col-md-3"><div class="card border-warning"><div class="card-body"><div class="text-muted">ASO a Vencer (30d)</div><div class="display-6">{{ aso_avencer }}</div></div></div></div>
-  <div class="col-md-3"><div class="card border-danger mt-3"><div class="card-body"><div class="text-muted">Tóxico Vencidos</div><div class="display-6">{{ tox_venc }}</div></div></div></div>
-  <div class="col-md-3"><div class="card border-warning mt-3"><div class="card-body"><div class="text-muted">Tóxico a Vencer (30d)</div><div class="display-6">{{ tox_avencer }}</div></div></div></div>
-  <div class="col-md-3"><div class="card border-secondary mt-3"><div class="card-body"><div class="text-muted">Funcionários</div><div class="display-6">{{ total_func }}</div></div></div></div>
-  <div class="col-md-3"><div class="card border-secondary mt-3"><div class="card-body"><div class="text-muted">Ativos / Inativos</div><div class="display-6">{{ ativos }} / {{ inativos }}</div></div></div></div>
+
+{% macro render_modal(modal_id, title, items, is_employee=True) %}
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        {% if items %}
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              {% if is_employee %}
+              <th>Funcionário</th>
+              <th>Validade</th>
+              {% else %}
+              <th>Empresa</th>
+              <th>Documento</th>
+              <th>Vencimento</th>
+              {% endif %}
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              {% if is_employee %}
+              <td>{{ item.nome }}</td>
+              <td>
+                {% if 'ASO' in title %}{{ item.aso_validade.strftime('%d/%m/%Y') if item.aso_validade else '' }}{% endif %}
+                {% if 'CNH' in title %}{{ item.cnh_validade.strftime('%d/%m/%Y') if item.cnh_validade else '' }}{% endif %}
+                {% if 'Tóxico' in title %}{{ item.exame_toxico_validade.strftime('%d/%m/%Y') if item.exame_toxico_validade else '' }}{% endif %}
+              </td>
+              <td class="text-end"><a href="{{ url_for('rh.employees_edit', emp_id=item.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">Ver Cadastro</a></td>
+              {% else %}
+              <td>{{ item.company.razao_social if item.company else 'N/A' }}</td>
+              <td>{{ item.descricao }}</td>
+              <td>{{ item.data_vencimento.strftime('%d/%m/%Y') if item.data_vencimento else '' }}</td>
+              <td class="text-end"><a href="{{ url_for('documents.edit', doc_id=item.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">Ver Documento</a></td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p>Nenhum item encontrado.</p>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
 </div>
+{% endmacro %}
+
+
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card border-danger h-100" role="button" data-bs-toggle="modal" data-bs-target="#docsVencidosModal">
+            <div class="card-body"><div class="text-muted">Docs Vencidos</div><div class="display-6">{{ docs_venc }}</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning h-100" role="button" data-bs-toggle="modal" data-bs-target="#docsAVencerModal">
+            <div class="card-body"><div class="text-muted">Docs a Vencer (30d)</div><div class="display-6">{{ docs_avencer }}</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-secondary h-100">
+            <div class="card-body"><div class="text-muted">Total de Funcionários</div><div class="display-6">{{ total_func }}</div></div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-secondary h-100">
+            <div class="card-body"><div class="text-muted">Ativos / Inativos</div><div class="display-6">{{ ativos }} / {{ inativos }}</div></div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-4">
+<h5>Vencimentos de Colaboradores (Ativos)</h5>
+<div class="row g-3">
+    <div class="col-md-3"><div class="card border-danger" role="button" data-bs-toggle="modal" data-bs-target="#asoVencidosModal"><div class="card-body"><div class="text-muted">ASOs Vencidos</div><div class="display-6">{{ aso_venc }}</div></div></div></div>
+    <div class="col-md-3"><div class="card border-warning" role="button" data-bs-toggle="modal" data-bs-target="#asoAVencerModal"><div class="card-body"><div class="text-muted">ASOs a Vencer (30d)</div><div class="display-6">{{ aso_avencer }}</div></div></div></div>
+    <div class="col-md-3"><div class="card border-danger" role="button" data-bs-toggle="modal" data-bs-target="#cnhVencidasModal"><div class="card-body"><div class="text-muted">CNHs Vencidas</div><div class="display-6">{{ cnh_venc }}</div></div></div></div>
+    <div class="col-md-3"><div class="card border-warning" role="button" data-bs-toggle="modal" data-bs-target="#cnhAVencerModal"><div class="card-body"><div class="text-muted">CNHs a Vencer (30d)</div><div class="display-6">{{ cnh_avencer }}</div></div></div></div>
+    <div class="col-md-3 mt-3"><div class="card border-danger" role="button" data-bs-toggle="modal" data-bs-target="#toxVencidosModal"><div class="card-body"><div class="text-muted">Tóxicos Vencidos</div><div class="display-6">{{ tox_venc }}</div></div></div></div>
+    <div class="col-md-3 mt-3"><div class="card border-warning" role="button" data-bs-toggle="modal" data-bs-target="#toxAVencerModal"><div class="card-body"><div class="text-muted">Tóxicos a Vencer (30d)</div><div class="display-6">{{ tox_avencer }}</div></div></div></div>
+</div>
+
+{{ render_modal('docsVencidosModal', 'Documentos de Empresa Vencidos', docs_venc_list, is_employee=False) }}
+{{ render_modal('docsAVencerModal', 'Documentos de Empresa a Vencer (30d)', docs_avencer_list, is_employee=False) }}
+
+{{ render_modal('asoVencidosModal', 'ASOs Vencidos', aso_venc_list) }}
+{{ render_modal('asoAVencerModal', 'ASOs a Vencer (30d)', aso_avencer_list) }}
+
+{{ render_modal('cnhVencidasModal', 'CNHs Vencidas', cnh_venc_list) }}
+{{ render_modal('cnhAVencerModal', 'CNHs a Vencer (30d)', cnh_avencer_list) }}
+
+{{ render_modal('toxVencidosModal', 'Exames Toxicológicos Vencidos', tox_venc_list) }}
+{{ render_modal('toxAVencerModal', 'Exames Toxicológicos a Vencer (30d)', tox_avencer_list) }}
 {% endblock %}

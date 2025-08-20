@@ -6,27 +6,34 @@ from extensions import db, login_manager, migrate
 from models import User, Company, Funcao, DocumentType
 from dotenv import load_dotenv
 
-# Carrega as variáveis de ambiente do arquivo .env
-load_dotenv()
+def normalize_upload_path(path):
+    """Filtro para normalizar caminhos de upload para URLs."""
+    if not path:
+        return ""
+    rel_path = str(path).replace('\\', '/')
+    if rel_path.startswith('uploads/'):
+        rel_path = rel_path[len('uploads/'):]
+    return rel_path
 
 def create_app():
     """
     Função factory para criar e configurar a instância da aplicação Flask.
     """
-    app = Flask(__name__)
+    # Garante que o Flask procure templates na pasta 'templates'
+    app = Flask(__name__, template_folder="templates")
     
-    # Configurações da aplicação
+    app.jinja_env.filters['norm_upload'] = normalize_upload_path
+    
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-secret-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///app.db')
     app.config['UPLOAD_FOLDER'] = 'uploads'
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Inicializa as extensões com a aplicação
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
 
-    # Importa e registra os blueprints (módulos da aplicação)
+    # Importação dos blueprints
     from blueprints.main.routes import main_bp
     from blueprints.auth.routes import auth_bp
     from blueprints.companies.routes import companies_bp
@@ -37,7 +44,9 @@ def create_app():
     from blueprints.pdv.routes import pdv_bp
     from blueprints.uploads.routes import uploads_bp
     from blueprints.dash.routes import dash_bp
+    from blueprints.customers.routes import customers_bp
     
+    # Registro dos blueprints
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(companies_bp, url_prefix='/empresas')
@@ -48,20 +57,19 @@ def create_app():
     app.register_blueprint(pdv_bp, url_prefix='/pdv')
     app.register_blueprint(uploads_bp)
     app.register_blueprint(dash_bp, url_prefix='/dash')
+    # O prefixo '/clientes' é definido aqui
+    app.register_blueprint(customers_bp, url_prefix='/clientes')
     
     print("Home ('/') apontada para dash.dashboard.")
     
     return app
 
-# Carrega o usuário para o Flask-Login
 @login_manager.user_loader
 def load_user(uid):
     return User.query.get(int(uid))
 
-# Cria a instância da aplicação
 app = create_app()
 
-# Define o comando 'init-data' para o CLI do Flask
 @app.cli.command("init-data")
 def init_data():
     """Cria os dados iniciais no banco de dados."""
@@ -81,6 +89,5 @@ def init_data():
     print("Dados iniciais criados. Login: admin / admin123")
 
 
-# Executa a aplicação
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)

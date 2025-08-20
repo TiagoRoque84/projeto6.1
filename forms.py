@@ -1,4 +1,3 @@
-
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField
 from wtforms.validators import DataRequired, Optional, Email
@@ -64,8 +63,6 @@ class EmployeeForm(FlaskForm):
     cnh_validade = DateField("Validade CNH", validators=[Optional()])
     exame_toxico_validade = DateField("Validade Toxicológico", validators=[Optional()])
     foto = FileField("Foto (jpg/png)", validators=[Optional()])
-
-    # Novos campos
     filho_menor14 = SelectField("Possui filho menor de 14 anos?", choices=[("", ""), ("1","Sim"), ("0","Não")], coerce=str, validators=[Optional()])
     escolaridade = SelectField(
         "Escolaridade",
@@ -82,7 +79,6 @@ class EmployeeForm(FlaskForm):
         ],
         validators=[Optional()],
     )
-
     submit = SubmitField("Salvar")
 
 class DocumentForm(FlaskForm):
@@ -106,3 +102,20 @@ class EmployeeDocForm(FlaskForm):
     descricao = StringField("Descrição")
     arquivo = FileField("Arquivo (PDF/JPG/PNG)", validators=[Optional()])
     submit = SubmitField("Enviar")
+
+# --- NOVO FORMULÁRIO ADICIONADO ---
+class CustomerForm(FlaskForm):
+    tipo_pessoa = SelectField("Tipo", choices=[('PF', 'Pessoa Física'), ('PJ', 'Pessoa Jurídica')], default='PF', validators=[DataRequired()])
+    nome_razao_social = StringField("Nome / Razão Social", validators=[DataRequired()])
+    cpf_cnpj = StringField("CPF / CNPJ")
+    telefone = StringField("Telefone")
+    email = StringField("E-mail", validators=[Optional(), Email()])
+    cep = StringField("CEP")
+    logradouro = StringField("Logradouro")
+    numero = StringField("Número")
+    complemento = StringField("Complemento")
+    bairro = StringField("Bairro")
+    cidade = StringField("Cidade")
+    uf = StringField("UF")
+    ativo = BooleanField("Ativo", default=True)
+    submit = SubmitField("Salvar")
