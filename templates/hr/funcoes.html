@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Funções</h3>
+
+<form method="post" class="row g-2 mb-3">
+  {{ form.hidden_tag() }}
+  <div class="col-md-6">
+    {{ form.nome.label }} {{ form.nome(class_='form-control', placeholder='Ex.: Motorista') }}
+  </div>
+  <div class="col-md-2 d-flex align-items-end">
+    <button class="btn btn-primary w-100">Salvar</button>
+  </div>
+  <div class="col-md-2 d-flex align-items-end">
+    <a class="btn btn-outline-secondary w-100" href="{{ url_for('rh.employees') }}">Voltar</a>
+  </div>
+</form>
+
+<table class="table table-striped">
+  <thead><tr><th>ID</th><th>Nome</th><th style="width:200px">Ações</th></tr></thead>
+  <tbody>
+    {% for f in itens %}
+    <tr>
+      <td>{{ f.id }}</td>
+      <td>{{ f.nome }}</td>
+      <td class="d-flex gap-2">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('rh.funcoes_edit', funcao_id=f.id) }}">Editar</a>
+        <form method="post" action="{{ url_for('rh.funcoes_delete', funcao_id=f.id) }}" onsubmit="return confirm('Remover?');">
+          <button class="btn btn-sm btn-outline-danger">Excluir</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

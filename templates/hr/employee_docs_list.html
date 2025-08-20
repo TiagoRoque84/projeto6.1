@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Documentos de {{ emp.nome }}</h3>
+
+<form class="d-flex gap-2 mb-3">
+  <input name="q" value="{{ request.args.get('q','') }}" class="form-control" placeholder="Buscar por tipo ou descrição">
+  <button class="btn btn-outline-secondary">Filtrar</button>
+  <a class="btn btn-outline-primary" href="{{ url_for('rh.employees') }}">Voltar</a>
+</form>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data" class="row g-2">
+      {{ form.hidden_tag() }}
+      <div class="col-md-2">{{ form.tipo.label }} {{ form.tipo(class_='form-select') }}</div>
+      <div class="col-md-7">{{ form.descricao.label }} {{ form.descricao(class_='form-control') }}</div>
+      <div class="col-md-3">{{ form.arquivo.label }} {{ form.arquivo(class_='form-control') }}</div>
+      <div class="col-12"><button class="btn btn-success">Enviar</button></div>
+    </form>
+  </div>
+</div>
+
+<table class="table table-striped">
+  <thead>
+    <tr><th>Tipo</th><th>Descrição</th><th>Enviado em</th><th>Arquivo</th></tr>
+  </thead>
+  <tbody>
+    {% for d in docs %}
+    <tr>
+      <td>{{ d.tipo }}</td>
+      <td>{{ d.descricao }}</td>
+      <td>{{ d.uploaded_at }}</td>
+      <td>
+        {% if d.arquivo_path %}
+          {# Normaliza qualquer formato salvo (uploads/..., \func_docs\..., etc.) #}
+          {% set rel = d.arquivo_path | norm_upload %}
+          <a href="{{ url_for('uploads.serve_upload', filename=rel) }}" target="_blank" rel="noopener">Abrir</a>
+        {% else %}-{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

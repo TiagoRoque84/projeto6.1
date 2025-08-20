@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3>Documentos de {{ emp.nome }}</h3>
+
+<form class="d-flex gap-2 mb-3" method="get">
+  <input name="q" value="{{ request.args.get('q','') }}" class="form-control" placeholder="Buscar por tipo ou descrição">
+  <button class="btn btn-outline-secondary">Filtrar</button>
+  <a class="btn btn-outline-primary" href="{{ url_for('rh.employees') }}">Voltar</a>
+</form>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data" class="row g-2">
+      {{ form.hidden_tag() }}
+      <div class="col-md-2">
+        {{ form.tipo.label }} 
+        {{ form.tipo(class_='form-select') }}
+      </div>
+      <div class="col-md-7">
+        {{ form.descricao.label }} 
+        {{ form.descricao(class_='form-control', placeholder='Ex.: CNH, Comprovante, Certidão...') }}
+      </div>
+      <div class="col-md-3">
+        {{ form.arquivo.label }} 
+        {{ form.arquivo(class_='form-control') }}
+      </div>
+      <div class="col-12 pt-2">
+        <button class="btn btn-success">Enviar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th style="width: 160px;">Tipo</th>
+      <th>Descrição</th>
+      <th style="width: 180px;">Enviado em</th>
+      <th style="width: 120px;">Arquivo</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if docs and docs|length > 0 %}
+      {% for d in docs %}
+      <tr>
+        <td>{{ d.tipo or '-' }}</td>
+        <td>{{ d.descricao or '-' }}</td>
+        <td>
+          {% if d.uploaded_at %}
+            {{ d.uploaded_at.strftime('%d/%m/%Y %H:%M') }}
+          {% else %}-{% endif %}
+        </td>
+        <td>
+          {% if d.arquivo_path %}
+            {% set rel = (d.arquivo_path|norm_upload) %}
+            <a href="{{ url_for('uploads.serve_upload', filename=rel) }}" target="_blank">Abrir</a>
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr><td colspan="4">Nenhum documento enviado ainda.</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+{% endblock %}

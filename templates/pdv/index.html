@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>PDV / Caixa rápido</h3>
+<form method="post" class="row g-3">
+  {{ form.hidden_tag() }}
+  <div class="col-md-3">{{ form.tipo.label }} {{ form.tipo(class_='form-select') }}</div>
+  <div class="col-md-3">{{ form.valor.label }} {{ form.valor(class_='form-control', step='0.01') }}</div>
+  <div class="col-md-3">{{ form.pagamento.label }} {{ form.pagamento(class_='form-select') }}</div>
+  <div class="col-md-3">{{ form.ticket_ref.label }} {{ form.ticket_ref(class_='form-control') }}</div>
+  <div class="col-md-6">{{ form.cliente.label }} {{ form.cliente(class_='form-control') }}</div>
+  <div class="col-md-12">{{ form.descricao.label }} {{ form.descricao(class_='form-control') }}</div>
+  <div class="col-12 d-flex gap-2">
+    {{ form.submit(class_='btn btn-success') }}
+    {{ form.submit_no_print(class_='btn btn-outline-secondary') }}
+    <a class="btn btn-outline-primary" href="{{ url_for('pdv.pdv_list') }}">Movimentos</a>
+    <a class="btn btn-outline-dark" href="{{ url_for('pdv.test_print') }}">Teste impressão</a>
+  </div>
+</form>
+{% endblock %}

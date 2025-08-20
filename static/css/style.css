@@ -1,0 +1,5 @@
+
+.brand-logo{width:180px;max-height:56px;height:auto;object-fit:contain}
+.login-logo{max-height:120px;width:auto;object-fit:contain}
+.btn-success, .btn-success:visited { color: #fff !important; }
+.btn-success:hover, .btn-success:focus { color: #fff !important; }

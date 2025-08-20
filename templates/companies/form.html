@@ -1,0 +1,68 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ title }}</h3>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div class="row">
+    <div class="col-md-6 mb-3">{{ form.razao_social.label }} {{ form.razao_social(class_='form-control') }}</div>
+    <div class="col-md-6 mb-3">{{ form.nome_fantasia.label }} {{ form.nome_fantasia(class_='form-control') }}</div>
+    <div class="col-md-4 mb-3">
+      <div class="d-flex justify-content-between align-items-end">
+        <div style="width:100%">{{ form.cnpj.label }} {{ form.cnpj(class_='form-control', id='cnpj') }}</div>
+        <button type="button" class="btn btn-outline-secondary ms-2" onclick="buscarCNPJ()">Buscar</button>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">{{ form.inscricao_estadual.label }} {{ form.inscricao_estadual(class_='form-control') }}</div>
+    <div class="col-md-4 mb-3">
+      <div class="d-flex justify-content-between align-items-end">
+        <div style="width:100%">{{ form.cep.label }} {{ form.cep(class_='form-control', id='cep') }}</div>
+        <button type="button" class="btn btn-outline-secondary ms-2" onclick="buscarCEP()">Buscar</button>
+      </div>
+    </div>
+    <div class="col-md-6 mb-3">{{ form.logradouro.label }} {{ form.logradouro(class_='form-control') }}</div>
+    <div class="col-md-2 mb-3">{{ form.numero.label }} {{ form.numero(class_='form-control') }}</div>
+    <div class="col-md-4 mb-3">{{ form.complemento.label }} {{ form.complemento(class_='form-control') }}</div>
+    <div class="col-md-4 mb-3">{{ form.bairro.label }} {{ form.bairro(class_='form-control') }}</div>
+    <div class="col-md-6 mb-3">{{ form.cidade.label }} {{ form.cidade(class_='form-control') }}</div>
+    <div class="col-md-2 mb-3">{{ form.uf.label }} {{ form.uf(class_='form-control') }}</div>
+    <div class="col-md-6 mb-3">{{ form.alert_email.label }} {{ form.alert_email(class_='form-control') }}</div>
+    <div class="col-md-6 mb-3">{{ form.alert_whatsapp.label }} {{ form.alert_whatsapp(class_='form-control') }}</div>
+    <div class="col-12 mb-3 form-check">{{ form.ativa(class_='form-check-input') }} {{ form.ativa.label(class_='form-check-label') }}</div>
+  </div>
+  <button class="btn btn-primary">Salvar</button>
+</form>
+<script>
+async function buscarCEP(){
+  const cep = document.getElementById('cep').value.replace(/\D/g,'');
+  if(!cep) return;
+  const r = await fetch(`/rh/api/cep/${cep}`);
+  const j = await r.json();
+  if(!j.erro){
+    document.querySelector('[name=logradouro]').value = j.logradouro||'';
+    document.querySelector('[name=bairro]').value = j.bairro||'';
+    document.querySelector('[name=cidade]').value = j.localidade||'';
+    document.querySelector('[name=uf]').value = j.uf||'';
+  }
+}
+async function buscarCNPJ(){
+  const cnpj = document.getElementById('cnpj').value.replace(/\D/g,'');
+  if(!cnpj) return;
+  const r = await fetch(`/empresas/api/cnpj/${cnpj}`);
+  const j = await r.json();
+  if(j && !j.erro){
+    if(j.razao_social) document.querySelector('[name=razao_social]').value = j.razao_social;
+    if(j.nome_fantasia) document.querySelector('[name=nome_fantasia]').value = j.nome_fantasia;
+    if(j.cep) document.querySelector('[name=cep]').value = j.cep;
+    if(j.logradouro) document.querySelector('[name=logradouro]').value = j.logradouro;
+    if(j.bairro) document.querySelector('[name=bairro]').value = j.bairro;
+    if(j.cidade) document.querySelector('[name=cidade]').value = j.cidade;
+    if(j.uf) document.querySelector('[name=uf]').value = j.uf;
+    if(j.numero) document.querySelector('[name=numero]').value = j.numero;
+    if(j.complemento) document.querySelector('[name=complemento]').value = j.complemento;
+  } else {
+    alert('CNPJ não encontrado na BrasilAPI.');
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Movimentos do Caixa</h3>
+<form class="d-flex gap-2 mb-3">
+  <input class="form-control" name="q" value="{{ q }}" placeholder="Buscar por cliente, ticket, descrição...">
+  <button class="btn btn-outline-secondary">Filtrar</button>
+  <a class="btn btn-outline-primary" href="{{ url_for('pdv.pdv_index') }}">Novo</a>
+</form>
+<table class="table table-sm table-striped">
+  <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Forma</th><th>Cliente</th><th>Ticket</th><th>Descrição</th></tr></thead>
+  <tbody>
+    {% for i in items %}
+    <tr>
+      <td>{{ i.created_at.strftime("%d/%m/%Y %H:%M") }}</td>
+      <td>{{ i.tipo }}</td>
+      <td>R$ {{ '%.2f'|format(i.valor|float) }}</td>
+      <td>{{ i.pagamento }}</td>
+      <td>{{ i.cliente or '-' }}</td>
+      <td>{{ i.ticket_ref or '-' }}</td>
+      <td>{{ i.descricao or '-' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div class="alert alert-info">Saldo parcial dos lançamentos exibidos: <b>R$ {{ '%.2f'|format(total|float) }}</b></div>
+{% endblock %}

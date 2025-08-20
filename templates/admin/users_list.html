@@ -1,0 +1,25 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <form class="d-flex gap-2">
+    <input name="q" value="{{ q }}" class="form-control" placeholder="Buscar usuário ou nome">
+    <button class="btn btn-outline-secondary">Filtrar</button>
+  </form>
+  <a class="btn btn-success" href="{{ url_for('admin_users.new') }}">Novo Usuário</a>
+</div>
+<table class="table table-striped">
+  <thead><tr><th>Usuário</th><th>Nome completo</th><th>Perfil</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for u in items %}
+    <tr>
+      <td>{{ u.username }}</td>
+      <td>{{ u.nome_completo }}</td>
+      <td>{{ u.role }}</td>
+      <td>{{ 'Ativo' if u.active else 'Inativo' }}</td>
+      <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_users.edit', uid=u.id) }}">Editar</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

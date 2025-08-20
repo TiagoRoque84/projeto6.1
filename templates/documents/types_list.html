@@ -1,0 +1,21 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h3 class="mb-0">Tipos de Documentos</h3>
+  <a class="btn btn-success" href="{{ url_for('documents.tipos_new') }}">Novo Tipo</a>
+</div>
+<table class="table table-striped">
+  <thead><tr><th>Nome</th><th style="width:120px"></th></tr></thead>
+  <tbody>
+    {% for t in items %}
+    <tr>
+      <td>{{ t.nome }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('documents.tipos_edit', tid=t.id) }}">Editar</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

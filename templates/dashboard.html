@@ -1,0 +1,15 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="alert alert-success">Bem-vindo!</div>
+<div class="row g-3">
+  <div class="col-md-3"><div class="card border-danger"><div class="card-body"><div class="text-muted">Docs Vencidos</div><div class="display-6">{{ docs_venc }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-warning"><div class="card-body"><div class="text-muted">Docs a Vencer (30d)</div><div class="display-6">{{ docs_avencer }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-danger"><div class="card-body"><div class="text-muted">ASO Vencidos</div><div class="display-6">{{ aso_venc }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-warning"><div class="card-body"><div class="text-muted">ASO a Vencer (30d)</div><div class="display-6">{{ aso_avencer }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-danger mt-3"><div class="card-body"><div class="text-muted">Tóxico Vencidos</div><div class="display-6">{{ tox_venc }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-warning mt-3"><div class="card-body"><div class="text-muted">Tóxico a Vencer (30d)</div><div class="display-6">{{ tox_avencer }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-secondary mt-3"><div class="card-body"><div class="text-muted">Funcionários</div><div class="display-6">{{ total_func }}</div></div></div></div>
+  <div class="col-md-3"><div class="card border-secondary mt-3"><div class="card-body"><div class="text-muted">Ativos / Inativos</div><div class="display-6">{{ ativos }} / {{ inativos }}</div></div></div></div>
+</div>
+{% endblock %}

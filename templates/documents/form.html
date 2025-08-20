@@ -1,0 +1,20 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ title }}</h3>
+<form method="post" enctype="multipart/form-data">
+  {{ form.hidden_tag() }}
+  <div class="row">
+    <div class="col-md-6 mb-3">{{ form.company_id.label }} {{ form.company_id(class_='form-select') }}</div>
+    <div class="col-md-6 mb-3">{{ form.tipo_id.label }} {{ form.tipo_id(class_='form-select') }}</div>
+    <div class="col-md-6 mb-3">{{ form.descricao.label }} {{ form.descricao(class_='form-control') }}</div>
+    <div class="col-md-3 mb-3">{{ form.numero.label }} {{ form.numero(class_='form-control') }}</div>
+    <div class="col-md-3 mb-3">{{ form.orgao_emissor.label }} {{ form.orgao_emissor(class_='form-control') }}</div>
+    <div class="col-md-3 mb-3">{{ form.responsavel.label }} {{ form.responsavel(class_='form-control') }}</div>
+    <div class="col-md-3 mb-3">{{ form.data_expedicao.label }} {{ form.data_expedicao(class_='form-control') }}</div>
+    <div class="col-md-3 mb-3">{{ form.data_vencimento.label }} {{ form.data_vencimento(class_='form-control') }}</div>
+    <div class="col-md-6 mb-3">{{ form.arquivo.label }} {{ form.arquivo(class_='form-control') }}</div>
+  </div>
+  <button class="btn btn-primary">Salvar</button>
+</form>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h3>Colaboradores</h3>
+
+<form class="row g-2 mb-3" method="get">
+  <div class="col-md-4">
+    <input name="q" value="{{ request.args.get('q','') }}" class="form-control" placeholder="Buscar por nome, CPF, empresa, função...">
+  </div>
+  <div class="col-md-2">
+    <select name="ativo" class="form-select">
+      {% set a = request.args.get('ativo', '') %}
+      <option value=""  {{ 'selected' if a=='' else '' }}>Todos</option>
+      <option value="1" {{ 'selected' if a=='1' else '' }}>Ativos</option>
+      <option value="0" {{ 'selected' if a=='0' else '' }}>Inativos</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select name="mes" class="form-select">
+      {% set m = request.args.get('mes','') %}
+      <option value=""  {{ 'selected' if m=='' else '' }}>Aniversariantes (todos)</option>
+      {% for i in range(1,13) %}
+        <option value="{{ i }}" {{ 'selected' if m==i|string else '' }}>Mês {{ "%02d"|format(i) }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2 d-grid">
+    <button class="btn btn-outline-secondary">Filtrar</button>
+  </div>
+  <div class="col-md-2 d-grid">
+    <a class="btn btn-outline-primary" href="{{ url_for('rh.funcoes') }}">Funções</a>
+  </div>
+</form>
+
+<div class="mb-3 d-flex gap-2">
+  <a class="btn btn-success" href="/rh/colaboradores/novo">Novo colaborador</a>
+</div>
+
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>Empresa</th>
+      <th>Função</th>
+      <th>Status</th>
+      <th>Admissão</th>
+      <th>Tempo de casa</th>
+      <th style="width: 260px;">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in items %}
+    <tr>
+      <td>{{ e.id }}</td>
+      <td>{{ e.nome }}</td>
+      <td>{{ e.company.razao_social if e.company else '-' }}</td>
+      <td>{{ e.funcao.nome if e.funcao else '-' }}</td>
+      <td>{{ 'Ativo' if e.ativo else 'Inativo' }}</td>
+      <td>{{ e.data_admissao if e.data_admissao else '-' }}</td>
+      <td>{{ e.tempo_de_casa() if e.tempo_de_casa else '-' }}</td>
+      <td class="d-flex flex-wrap gap-2">
+        <a class="btn btn-sm btn-outline-primary" href="/rh/colaboradores/{{ e.id }}/docs">Docs</a>
+        <a class="btn btn-sm btn-outline-secondary" href="/rh/colaboradores/{{ e.id }}/edit">Editar</a>
+        <a class="btn btn-sm btn-outline-dark" target="_blank" href="/rh/colaboradores/{{ e.id }}/pdf">PDF</a>
+        <form method="post" action="/rh/colaboradores/{{ e.id }}/delete" onsubmit="return confirm('Remover este colaborador?');">
+          <button class="btn btn-sm btn-outline-danger">Excluir</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ title }}</h3>
+<form method="post">
+  <div class="row">
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Usuário</label>
+      <input class="form-control" required name="username" value="{{ item.username if item else '' }}">
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Senha {{ '(deixe em branco para não alterar)' if item else '' }}</label>
+      <input class="form-control" name="password" type="password" {{ '' if item else 'required' }}>
+    </div>
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Nome completo</label>
+      <input class="form-control" name="nome_completo" value="{{ item.nome_completo if item else '' }}">
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Perfil</label>
+      <select class="form-select" name="role">
+        <option value="user" {{ 'selected' if item and item.role=='user' else '' }}>Usuário</option>
+        <option value="admin" {{ 'selected' if item and item.role=='admin' else '' }}>Admin</option>
+      </select>
+    </div>
+    <div class="col-md-3 mb-3 d-flex align-items-end">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="active" id="active" {{ 'checked' if (not item or item.active) else '' }}>
+        <label class="form-check-label" for="active">Ativo</label>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-primary">Salvar</button>
+</form>
+{% endblock %}

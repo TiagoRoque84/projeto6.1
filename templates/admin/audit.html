@@ -1,0 +1,13 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<h3>Auditoria</h3>
+<table class="table table-sm table-striped">
+  <thead><tr><th>Quando</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>ID</th><th>Payload</th></tr></thead>
+  <tbody>
+    {% for l in logs %}
+    <tr><td>{{ l.created_at }}</td><td>{{ l.user }}</td><td>{{ l.action }}</td><td>{{ l.entity }}</td><td>{{ l.entity_id }}</td><td><code style="white-space:pre-wrap">{{ l.payload }}</code></td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

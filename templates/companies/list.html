@@ -1,0 +1,25 @@
+
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <form class="d-flex gap-2">
+    <input name="q" value="{{ q }}" class="form-control" placeholder="Buscar...">
+    <button class="btn btn-outline-secondary">Filtrar</button>
+  </form>
+  <a class="btn btn-success" href="{{ url_for('companies.new') }}">Nova Empresa</a>
+</div>
+<table class="table table-striped">
+  <thead><tr><th>Razão Social</th><th>Fantasia</th><th>CNPJ</th><th></th></tr></thead>
+  <tbody>
+    {% for c in items %}
+    <tr>
+      <td>{{ c.razao_social }}</td><td>{{ c.nome_fantasia }}</td><td>{{ c.cnpj }}</td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('companies.edit', company_id=c.id) }}">Editar</a>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('companies.company_pdf', company_id=c.id) }}">PDF</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
