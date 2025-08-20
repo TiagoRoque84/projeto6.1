@@ -8,11 +8,14 @@ Create Date: 2025-08-11 15:28:02
 from alembic import op
 import sqlalchemy as sa
 
+# migrations/versions/pdv_cash_20250811152802.py
+# ...
 # revision identifiers, used by Alembic.
 revision = 'pdv_cash_20250811152802'
-down_revision = None
+down_revision = 'd9a8413e3fdb' # <--- CORREÇÃO AQUI
 branch_labels = None
 depends_on = None
+# ...
 
 def upgrade():
     op.create_table(
