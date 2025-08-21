@@ -1,8 +1,7 @@
 # forms.py
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField, IntegerField, TextAreaField
-# Importa o campo de data e hora
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField, IntegerField, TextAreaField, DecimalField, FloatField
 from wtforms.fields import DateTimeField
 from wtforms.validators import DataRequired, Optional, Email, NumberRange
 
@@ -24,10 +23,12 @@ class CompanyForm(FlaskForm):
     cidade = StringField("Cidade")
     uf = StringField("UF")
     ativa = BooleanField("Ativa")
+    is_default = BooleanField("Padrão para Impressão de Recibos")
     alert_email = StringField("E-mails para alertas (separar por ;)")
     alert_whatsapp = StringField("WhatsApp(s) para alertas (+55DDDNUM; separados por ;)")
     submit = SubmitField("Salvar")
 
+# ... (outros forms como FuncaoForm, EmployeeForm, etc. continuam aqui) ...
 class FuncaoForm(FlaskForm):
     nome = StringField("Nome", validators=[DataRequired()])
     submit = SubmitField("Salvar")
@@ -150,7 +151,7 @@ class ServicoForm(FlaskForm):
     nome = StringField('Nome do Serviço', validators=[DataRequired(message="O nome do serviço é obrigatório.")])
     submit = SubmitField('Salvar')
 
-# --- NOVO FORMULÁRIO DE AGENDAMENTO ---
+# --- FORMULÁRIO DE AGENDAMENTO ATUALIZADO ---
 class AgendamentoForm(FlaskForm):
     customer_id = SelectField('Cliente', coerce=int, validators=[DataRequired(message="É preciso selecionar um cliente.")])
     servico_id = SelectField('Serviço', coerce=int, validators=[DataRequired(message="É preciso selecionar um serviço.")])
@@ -158,4 +159,19 @@ class AgendamentoForm(FlaskForm):
     local = StringField('Local da Coleta/Serviço', validators=[DataRequired(message="O local é obrigatório.")])
     observacao = TextAreaField('Observações')
     status = SelectField('Status', choices=[('Agendado', 'Agendado'), ('Realizado', 'Realizado'), ('Cancelado', 'Cancelado')], default='Agendado')
-    submit = SubmitField('Salvar Agendamento')
+    submit = SubmitField('Apenas Salvar')
+    # Novo botão
+    submit_and_print = SubmitField('Salvar e Imprimir')
+
+class MovementForm(FlaskForm):
+    tipo = SelectField("Tipo de Movimento", choices=[ ('VENDA', 'Venda / Pesagem'), ('SANGRIA', 'Sangria (Retirada para o cofre)'), ('RETIRADA', 'Retirada (Pagamento de despesa)') ], validators=[DataRequired()])
+    customer_id = SelectField("Cliente (para lançar na conta)", coerce=int, validators=[Optional()])
+    valor = DecimalField("Valor (R$)", places=2, validators=[DataRequired(), NumberRange(min=0)])
+    ticket_ref = StringField("Ticket de Pesagem")
+    placa = StringField("Placa do Veículo")
+    material = StringField("Material Pesado")
+    peso = FloatField("Peso (kg)", validators=[Optional()])
+    pagamento = SelectField("Forma de pagamento", choices=[ ("DINHEIRO","Dinheiro"), ("PIX","Pix"), ("CARTAO","Cartão"), ("CONTA", "Na Conta (Fiado)") ], validators=[DataRequired()])
+    descricao = StringField("Descrição/Motivo", validators=[DataRequired()])
+    submit = SubmitField("Lançar e imprimir")
+    submit_no_print = SubmitField("Apenas lançar")

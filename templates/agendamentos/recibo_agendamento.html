@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Comprovante de Agendamento</title>
+    <style>
+        @page { margin: 5mm; }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            width: 280px;
+            font-size: 14px;
+            line-height: 1.3;
+            margin: 0;
+            padding: 5px;
+            color: #000;
+        }
+        .center { text-align: center; }
+        .bold { font-weight: bold; }
+        hr { border: 0; border-top: 1px dashed #000; }
+        .info { margin-bottom: 8px; }
+        .info-label { display: block; font-weight: bold; margin-bottom: 2px; }
+        .obs { border: 1px dashed #000; padding: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body onload="window.print();">
+
+    <div class="center">
+        <div class="bold">{{ empresa.nome }}</div>
+        <div>{{ empresa.endereco }}</div>
+        <div>CNPJ: {{ empresa.cnpj }}</div>
+    </div>
+    <hr>
+    <div class="center bold">
+        COMPROVANTE DE AGENDAMENTO
+    </div>
+    <hr>
+    
+    <div class="info">
+        <span class="info-label">Data / Hora:</span>
+        {{ agendamento.data_hora.strftime('%d/%m/%Y às %H:%M') }}
+    </div>
+
+    <div class="info">
+        <span class="info-label">Cliente:</span>
+        {{ agendamento.customer.nome_razao_social }}
+    </div>
+
+    <div class="info">
+        <span class="info-label">Serviço:</span>
+        {{ agendamento.servico.nome }}
+    </div>
+
+    <div class="info">
+        <span class="info-label">Local:</span>
+        {{ agendamento.local }}
+    </div>
+    
+    {% if agendamento.observacao %}
+    <div class="info obs">
+        <span class="info-label">Observações:</span>
+        {{ agendamento.observacao }}
+    </div>
+    {% endif %}
+
+    <hr>
+    <div class="center" style="margin-top: 10px;">
+        Este é um comprovante de agendamento e não tem valor fiscal.
+    </div>
+    
+    <script>
+        (function() {
+            var afterPrint = function() { window.close(); };
+            if (window.matchMedia) {
+                var mediaQueryList = window.matchMedia('print');
+                mediaQueryList.addListener(function(mql) {
+                    if (!mql.matches) { afterPrint(); }
+                });
+            }
+            window.onafterprint = afterPrint;
+        }());
+    </script>
+
+</body>
+</html>

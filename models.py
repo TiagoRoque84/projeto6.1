@@ -3,6 +3,12 @@
 from datetime import datetime, date
 from extensions import db
 from flask_login import UserMixin
+import pytz
+
+def now_sao_paulo():
+    """Retorna o horário atual no fuso de São Paulo."""
+    return datetime.now(pytz.timezone('America/Sao_Paulo'))
+
 
 class AuditLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -11,7 +17,7 @@ class AuditLog(db.Model):
     entity = db.Column(db.String(50))
     entity_id = db.Column(db.Integer)
     payload = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=now_sao_paulo)
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -39,7 +45,11 @@ class Company(db.Model):
     ativa = db.Column(db.Boolean, default=True)
     alert_email = db.Column(db.String(500), default="")
     alert_whatsapp = db.Column(db.String(500), default="")
+    # --- NOVO CAMPO ADICIONADO ---
+    is_default = db.Column(db.Boolean, default=False)
 
+# ... (o resto do arquivo models.py continua exatamente igual) ...
+# (Employee, DocumentType, Document, etc., não mudam)
 class Funcao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
@@ -109,7 +119,7 @@ class Document(db.Model):
     data_expedicao = db.Column(db.Date)
     data_vencimento = db.Column(db.Date)
     arquivo_path = db.Column(db.String(300))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=now_sao_paulo)
     company = db.relationship("Company")
     tipo = db.relationship("DocumentType")
 
@@ -130,7 +140,7 @@ class EmployeeDocument(db.Model):
     tipo = db.Column(db.String(80))
     descricao = db.Column(db.String(200))
     arquivo_path = db.Column(db.String(300))
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    uploaded_at = db.Column(db.DateTime, default=now_sao_paulo)
     employee = db.relationship("Employee", backref="documentos")
 
 class CashMovement(db.Model):
@@ -141,7 +151,7 @@ class CashMovement(db.Model):
     pagamento = db.Column(db.String(20), nullable=False)
     descricao = db.Column(db.String(255))
     ticket_ref = db.Column(db.String(50))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=now_sao_paulo, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
     placa = db.Column(db.String(10))
@@ -189,13 +199,11 @@ class MovimentacaoEPI(db.Model):
     epi_id = db.Column(db.Integer, db.ForeignKey('epi.id'), nullable=False)
     tipo = db.Column(db.String(20), nullable=False)
     quantidade = db.Column(db.Integer, nullable=False)
-    data_movimentacao = db.Column(db.DateTime, default=datetime.utcnow)
+    data_movimentacao = db.Column(db.DateTime, default=now_sao_paulo)
     retirado_por = db.Column(db.String(200), nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
     epi = db.relationship('EPI', backref='movimentacoes')
     employee = db.relationship('Employee')
-
-# --- INÍCIO: NOVOS MODELOS PARA O MÓDULO DE AGENDAMENTO ---
 
 class Servico(db.Model):
     __tablename__ = 'servico'
@@ -210,9 +218,7 @@ class Agendamento(db.Model):
     data_hora = db.Column(db.DateTime, nullable=False)
     local = db.Column(db.String(300))
     observacao = db.Column(db.Text)
-    status = db.Column(db.String(50), default='Agendado') # Ex: Agendado, Realizado, Cancelado
+    status = db.Column(db.String(50), default='Agendado')
     
     customer = db.relationship('Customer', backref='agendamentos')
     servico = db.relationship('Servico', backref='agendamentos')
-
-# --- FIM: NOVOS MODELOS PARA O MÓDULO DE AGENDAMENTO ---

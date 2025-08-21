@@ -1,3 +1,4 @@
+# blueprints/companies/routes.py
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, current_app, jsonify
 from flask_login import login_required
@@ -26,8 +27,10 @@ def list():
 def new():
     form = CompanyForm()
     if form.validate_on_submit():
-        c = Company(**{f.name:getattr(form,f.name).data for f in form if hasattr(Company, f.name)})
-        db.session.add(c); db.session.commit()
+        c = Company()
+        form.populate_obj(c)
+        db.session.add(c)
+        db.session.commit()
         log_action("create","Company", c.id, {"cnpj": c.cnpj})
         flash("Empresa criada.", "success")
         return redirect(url_for("companies.list"))
@@ -39,12 +42,28 @@ def edit(company_id):
     c = Company.query.get_or_404(company_id)
     form = CompanyForm(obj=c)
     if form.validate_on_submit():
-        for f in form:
-            if hasattr(c, f.name): setattr(c, f.name, f.data)
-        db.session.commit(); log_action("update","Company", c.id, {"cnpj": c.cnpj})
+        form.populate_obj(c)
+        db.session.commit()
+        log_action("update","Company", c.id, {"cnpj": c.cnpj})
         flash("Empresa atualizada.", "success")
         return redirect(url_for("companies.list"))
     return render_template("companies/form.html", form=form, title="Editar Empresa")
+
+# --- INÍCIO: NOVA ROTA PARA EXCLUIR EMPRESA ---
+@companies_bp.route("/<int:company_id>/delete", methods=["POST"])
+@login_required
+def delete(company_id):
+    c = Company.query.get_or_404(company_id)
+    try:
+        db.session.delete(c)
+        db.session.commit()
+        log_action("delete", "Company", c.id, {"cnpj": c.cnpj})
+        flash("Empresa excluída com sucesso.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir empresa. Verifique se ela não está sendo usada em outros cadastros (ex: funcionários). Erro: {e}", "danger")
+    return redirect(url_for("companies.list"))
+# --- FIM: NOVA ROTA ---
 
 @companies_bp.route("/<int:company_id>/pdf")
 @login_required

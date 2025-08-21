@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% block content %}
 <h3>{{ title }}</h3>
@@ -28,7 +27,10 @@
     <div class="col-md-2 mb-3">{{ form.uf.label }} {{ form.uf(class_='form-control') }}</div>
     <div class="col-md-6 mb-3">{{ form.alert_email.label }} {{ form.alert_email(class_='form-control') }}</div>
     <div class="col-md-6 mb-3">{{ form.alert_whatsapp.label }} {{ form.alert_whatsapp(class_='form-control') }}</div>
-    <div class="col-12 mb-3 form-check">{{ form.ativa(class_='form-check-input') }} {{ form.ativa.label(class_='form-check-label') }}</div>
+    <div class="col-12 mb-3 d-flex gap-4">
+      <div class="form-check">{{ form.ativa(class_='form-check-input') }} {{ form.ativa.label(class_='form-check-label') }}</div>
+      <div class="form-check">{{ form.is_default(class_='form-check-input') }} {{ form.is_default.label(class_='form-check-label') }}</div>
+      </div>
   </div>
   <button class="btn btn-primary">Salvar</button>
 </form>

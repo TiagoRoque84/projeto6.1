@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Recibo</title>
+    <style>
+        /* Regra para tentar remover margens da página */
+        @page {
+            margin: 5mm;
+        }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            width: 280px; /* Largura para papel de 80mm */
+            /* Fonte aumentada para melhor leitura */
+            font-size: 14px;
+            line-height: 1.3;
+            margin: 0;
+            padding: 5px;
+            color: #000;
+        }
+        .center { text-align: center; }
+        .bold { font-weight: bold; }
+        hr { border: 0; border-top: 1px dashed #000; }
+        .info { margin-bottom: 5px; }
+        .info span { float: right; }
+        .clear { clear: both; }
+        .assinatura {
+            margin-top: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body onload="window.print();">
+
+    <div class="center">
+        <div class="bold">{{ empresa.nome }}</div>
+        <div>{{ empresa.endereco }}</div>
+        <div>CNPJ: {{ empresa.cnpj }}</div>
+    </div>
+    <hr>
+    <div class="center bold">
+        {% if mov.tipo == 'SANGRIA' or mov.tipo == 'RETIRADA' %}
+            COMPROVANTE DE {{ mov.tipo }}
+        {% else %}
+            CUPOM NÃO FISCAL
+        {% endif %}
+    </div>
+    <hr>
+    <div class="info">Data: <span>{{ mov.created_at.strftime('%d/%m/%Y %H:%M') }}</span></div>
+    <div class="clear"></div>
+    
+    {% if mov.ticket_ref %}
+        <div class="info">Ticket: <span>{{ mov.ticket_ref }}</span></div>
+        <div class="clear"></div>
+    {% endif %}
+    {% if mov.placa %}
+        <div class="info">Placa: <span>{{ mov.placa }}</span></div>
+        <div class="clear"></div>
+    {% endif %}
+    {% if mov.material %}
+        <div class="info">Material: <span>{{ mov.material }}</span></div>
+        <div class="clear"></div>
+    {% endif %}
+    {% if mov.peso %}
+        <div class="info">Peso (kg): <span>{{ '%.3f'|format(mov.peso|float) }}</span></div>
+        <div class="clear"></div>
+    {% endif %}
+
+    <hr>
+    <div class="info bold">
+        TOTAL: <span>R$ {{ '%.2f'|format(mov.valor|float) }}</span>
+    </div>
+    <div class="clear"></div>
+    <div class="info">Pagamento: <span>{{ mov.pagamento }}</span></div>
+    <div class="clear"></div>
+    <hr>
+
+    {% if mov.tipo == 'SANGRIA' or mov.tipo == 'RETIRADA' %}
+        <div class="info">Motivo: {{ mov.descricao }}</div>
+        <div class="assinatura">
+            _________________________<br>
+            Assinatura Responsável
+        </div>
+    {% endif %}
+
+    {% if is_test %}
+        <div class="center bold" style="margin-top: 20px;">** IMPRESSÃO DE TESTE OK **</div>
+    {% endif %}
+    
+    <script>
+        // Esta função fecha a aba após a impressão ser enviada
+        (function() {
+            var afterPrint = function() {
+                window.close();
+            };
+            if (window.matchMedia) {
+                var mediaQueryList = window.matchMedia('print');
+                mediaQueryList.addListener(function(mql) {
+                    if (!mql.matches) {
+                        afterPrint();
+                    }
+                });
+            }
+            // Para navegadores que não suportam addListener
+            window.onafterprint = afterPrint;
+        }());
+    </script>
+
+</body>
+</html>

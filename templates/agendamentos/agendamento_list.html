@@ -13,7 +13,7 @@
       <th>Serviço</th>
       <th>Local</th>
       <th class="text-center" style="width: 10%;">Status</th>
-      <th style="width: 150px;"></th>
+      <th style="width: 200px;"></th> {# Aumentado o espaço para os botões #}
     </tr>
   </thead>
   <tbody>
@@ -36,6 +36,7 @@
       </td>
       <td class="text-end">
         <div class="d-flex gap-2 justify-content-end">
+          <a href="{{ url_for('agendamentos.imprimir_agendamento', agendamento_id=item.id) }}" class="btn btn-sm btn-info" target="_blank">Imprimir</a>
           <a class="btn btn-sm btn-outline-primary" href="{{ url_for('agendamentos.agendamento_edit', agendamento_id=item.id) }}">Editar</a>
           <form method="post" action="{{ url_for('agendamentos.agendamento_delete', agendamento_id=item.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este agendamento?');">
             <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>

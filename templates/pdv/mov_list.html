@@ -1,13 +1,41 @@
 {% extends 'base.html' %}
 {% block content %}
 <h3>Movimentos do Caixa</h3>
-<form class="d-flex gap-2 mb-3">
-  <input class="form-control" name="q" value="{{ q }}" placeholder="Buscar por cliente, ticket, descrição...">
-  <button class="btn btn-outline-secondary">Filtrar</button>
-  <a class="btn btn-outline-primary" href="{{ url_for('pdv.pdv_index') }}">Novo</a>
-</form>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form class="d-flex gap-2">
+        <input class="form-control" name="q" value="{{ q }}" placeholder="Buscar por descrição...">
+        <button class="btn btn-outline-secondary">Filtrar</button>
+    </form>
+    <a class="btn btn-success" href="{{ url_for('pdv.pdv_index') }}">Novo Lançamento</a>
+</div>
+
+<div class="card bg-light mb-4">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('pdv.relatorio_diario') }}" class="d-flex gap-3 align-items-end" target="_blank">
+            <div>
+                <label for="data-inicio" class="form-label"><b>Relatório de Período (PDF)</b></label>
+                <input type="date" id="data-inicio" name="data_inicio" class="form-control" value="{{ request.args.get('data_inicio', '') }}" required>
+            </div>
+            <div>
+                <label for="data-fim" class="form-label"><b>Até</b></label>
+                <input type="date" id="data-fim" name="data_fim" class="form-control" value="{{ request.args.get('data_fim', '') }}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Gerar PDF</button>
+        </form>
+    </div>
+</div>
 <table class="table table-sm table-striped">
-  <thead><tr><th>Data</th><th>Tipo</th><th>Valor</th><th>Forma</th><th>Cliente</th><th>Ticket</th><th>Descrição</th></tr></thead>
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Tipo</th>
+      <th>Valor</th>
+      <th>Forma</th>
+      <th>Cliente/Descrição</th>
+      <th>Ticket</th>
+      <th style="width: 120px;">Ações</th>
+    </tr>
+  </thead>
   <tbody>
     {% for i in items %}
     <tr>
@@ -15,12 +43,20 @@
       <td>{{ i.tipo }}</td>
       <td>R$ {{ '%.2f'|format(i.valor|float) }}</td>
       <td>{{ i.pagamento }}</td>
-      <td>{{ i.cliente or '-' }}</td>
+      <td>{{ i.customer.nome_razao_social if i.customer else (i.descricao or '-') }}</td>
       <td>{{ i.ticket_ref or '-' }}</td>
-      <td>{{ i.descricao or '-' }}</td>
+      <td class="text-end">
+        <a href="{{ url_for('pdv.imprimir_recibo', mov_id=i.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+          Reimprimir
+        </a>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+        <td colspan="7" class="text-center">Nenhuma movimentação encontrada.</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
-<div class="alert alert-info">Saldo parcial dos lançamentos exibidos: <b>R$ {{ '%.2f'|format(total|float) }}</b></div>
+<div class="alert alert-info">Saldo parcial dos lançamentos exibidos (não inclui vendas 'Na Conta'): <b>R$ {{ '%.2f'|format(total|float) }}</b></div>
 {% endblock %}
