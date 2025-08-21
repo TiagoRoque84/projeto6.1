@@ -11,6 +11,7 @@ import os
 styles = getSampleStyleSheet()
 H1 = ParagraphStyle('H1', parent=styles['Heading1'], fontSize=16, spaceAfter=8)
 N = styles['Normal']
+BodyRight = ParagraphStyle('BodyRight', parent=styles['Normal'], alignment=2) # 2 = RIGHT
 
 def _s(v): 
     return "" if v is None else str(v)
@@ -189,4 +190,61 @@ def toxicos_pdf(buffer, app, items, titulo="Exame Toxicológico"):
         ('VALIGN',(0,0),(-1,-1),'TOP')
     ]))
     elems.extend([table, Spacer(1,0.4*cm), Paragraph(f"Gerado em {format_date(_date.today())}", N)])
+    doc.build(elems)
+
+# --- FUNÇÃO PARA GERAR PDF DE RETIRADA DE EPI ---
+def epi_saida_pdf(buffer, app, mov):
+    """Gera um PDF de comprovante de retirada de EPI."""
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=2*cm, rightMargin=2*cm, topMargin=1.5*cm, bottomMargin=1.5*cm)
+    elems = []
+
+    # Título
+    elems.append(Paragraph("Comprovante de Retirada de EPI", H1))
+    elems.append(Spacer(1, 0.5*cm))
+
+    # Dados da retirada
+    data_retirada = mov.data_movimentacao.strftime('%d/%m/%Y às %H:%M')
+    info_data = [
+        ["Data da Retirada:", P(data_retirada)],
+        ["Equipamento (EPI):", P(f"{_s(mov.epi.nome)} (CA: {_s(mov.epi.ca)})")],
+        ["Quantidade:", P(str(mov.quantidade))],
+    ]
+    info_table = Table(info_data, colWidths=[5*cm, 12*cm])
+    info_table.setStyle(TableStyle([
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    elems.append(info_table)
+    elems.append(Spacer(1, 1*cm))
+
+    # Termo de responsabilidade
+    termo_texto = f"""
+    Declaro para os devidos fins que recebi da empresa o(s) equipamento(s) de proteção individual (EPI) 
+    descrito(s) acima, em perfeitas condições de uso. Comprometo-me a utilizá-lo(s) durante toda a jornada 
+    de trabalho, a zelar pela sua guarda e conservação, e a devolvê-lo(s) quando solicitado.
+    Estou ciente de que o extravio ou dano por uso indevido poderá ser descontado de meu salário, 
+    conforme previsto no Art. 462 da CLT.
+    """
+    elems.append(Paragraph(termo_texto, N))
+    elems.append(Spacer(1, 3*cm))
+
+    # Linha da Assinatura
+    assinatura_data = [
+        ["_________________________________________"],
+        [P(f"<b>{_s(mov.retirado_por)}</b>")],
+        [P(f"CPF: {_s(mov.employee.cpf if mov.employee else 'Não informado')}")],
+    ]
+    assinatura_table = Table(assinatura_data, colWidths=[17*cm])
+    assinatura_table.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+    ]))
+    elems.append(assinatura_table)
+    
+    # Rodapé com data de geração
+    elems.append(Spacer(1, 2*cm))
+    elems.append(Paragraph(f"Gerado em {format_date(_date.today())}", BodyRight))
+
+    # CORREÇÃO: Adicionando o parêntese que faltava
     doc.build(elems)

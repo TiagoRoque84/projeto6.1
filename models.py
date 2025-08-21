@@ -1,3 +1,5 @@
+# models.py
+
 from datetime import datetime, date
 from extensions import db
 from flask_login import UserMixin
@@ -173,3 +175,41 @@ class Customer(db.Model):
     ativo = db.Column(db.Boolean, default=True)
 
     movimentos = db.relationship('CashMovement', backref='customer', lazy=True, foreign_keys=[CashMovement.customer_id])
+
+# --- INÍCIO: NOVOS MODELOS PARA O MÓDULO DE EPI ---
+
+class Fornecedor(db.Model):
+    __tablename__ = 'fornecedor'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(200), nullable=False)
+    cnpj = db.Column(db.String(20), unique=True)
+    epis = db.relationship('EPI', backref='fornecedor', lazy=True)
+
+class EPI(db.Model):
+    __tablename__ = 'epi'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(200), nullable=False)
+    ca = db.Column(db.String(50))  # Certificado de Aprovação
+    fornecedor_id = db.Column(db.Integer, db.ForeignKey('fornecedor.id'), nullable=True)
+    
+    # Campo para controlar o estoque atual
+    estoque = db.Column(db.Integer, default=0)
+
+class MovimentacaoEPI(db.Model):
+    __tablename__ = 'movimentacao_epi'
+    id = db.Column(db.Integer, primary_key=True)
+    epi_id = db.Column(db.Integer, db.ForeignKey('epi.id'), nullable=False)
+    tipo = db.Column(db.String(20), nullable=False)  # 'ENTRADA' ou 'SAIDA'
+    quantidade = db.Column(db.Integer, nullable=False)
+    data_movimentacao = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Para quem foi entregue
+    retirado_por = db.Column(db.String(200), nullable=False)
+    
+    # Vínculo opcional com o cadastro de funcionários
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
+    
+    epi = db.relationship('EPI', backref='movimentacoes')
+    employee = db.relationship('Employee')
+
+# --- FIM: NOVOS MODELOS PARA O MÓDULO DE EPI ---

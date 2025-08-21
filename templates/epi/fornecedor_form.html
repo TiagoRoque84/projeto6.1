@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ title }}</h3>
+<hr>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div class="row">
+    <div class="col-md-8 mb-3">
+      {{ form.nome.label(class="form-label") }}
+      {{ form.nome(class="form-control") }}
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="d-flex justify-content-between align-items-end">
+          <div style="width:100%">
+            {{ form.cnpj.label(class="form-label") }}
+            {{ form.cnpj(class="form-control", id="cnpj") }}
+          </div>
+          <button type="button" class="btn btn-outline-secondary ms-2" onclick="buscarCNPJ()">Buscar</button>
+        </div>
+      </div>
+  </div>
+  
+  {{ form.submit(class="btn btn-primary") }}
+  <a href="{{ url_for('epi.fornecedor_list') }}" class="btn btn-outline-secondary">Cancelar</a>
+</form>
+
+<script>
+  // Função para buscar dados do CNPJ na mesma API que já usamos
+  async function buscarCNPJ() {
+    const cnpj = document.getElementById('cnpj').value.replace(/\D/g,'');
+    if (!cnpj) return;
+    
+    // Usando a API já existente no seu sistema
+    const r = await fetch(`/empresas/api/cnpj/${cnpj}`);
+    if (r.ok) {
+        const j = await r.json();
+        if (j && !j.erro) {
+            // Preenche o campo nome se ele estiver vazio
+            const nomeField = document.querySelector('[name=nome]');
+            if (!nomeField.value && j.razao_social) {
+                nomeField.value = j.razao_social;
+            }
+        } else {
+            alert('CNPJ não encontrado na API.');
+        }
+    } else {
+        alert('Erro ao buscar CNPJ.');
+    }
+  }
+</script>
+{% endblock %}

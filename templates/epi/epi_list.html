@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0">Cadastro de Equipamentos (EPIs)</h3>
+  <a class="btn btn-success" href="{{ url_for('epi.epi_new') }}">Novo EPI</a>
+</div>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Nome do Equipamento</th>
+      <th>C.A.</th>
+      <th>Fornecedor</th>
+      <th style="width: 150px;"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.nome }}</td>
+      <td>{{ item.ca or '-' }}</td>
+      <td>{{ item.fornecedor.nome if item.fornecedor else '-' }}</td>
+      <td class="text-end">
+        <div class="d-flex gap-2 justify-content-end">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('epi.epi_edit', epi_id=item.id) }}">Editar</a>
+          <form method="post" action="{{ url_for('epi.epi_delete', epi_id=item.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este EPI?');">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4">Nenhum EPI cadastrado.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<a href="{{ url_for('epi.index') }}" class="btn btn-outline-secondary mt-3">Voltar</a>
+{% endblock %}

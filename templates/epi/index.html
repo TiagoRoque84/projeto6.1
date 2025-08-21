@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Módulo de Gestão de EPIs</h3>
+<p>Selecione uma das opções abaixo para começar.</p>
+<hr>
+<div class="list-group">
+  <a href="{{ url_for('epi.fornecedor_list') }}" class="list-group-item list-group-item-action">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">Fornecedores</h5>
+    </div>
+    <p class="mb-1">Cadastrar e gerenciar os fornecedores de EPIs.</p>
+  </a>
+  <a href="{{ url_for('epi.epi_list') }}" class="list-group-item list-group-item-action">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">Cadastro de EPIs</h5>
+    </div>
+    <p class="mb-1">Cadastrar e vincular os EPIs aos seus fornecedores.</p>
+  </a>
+  <a href="{{ url_for('epi.movimentacao_list') }}" class="list-group-item list-group-item-action">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">Movimentações de Estoque</h5>
+    </div>
+    <p class="mb-1">Registrar a entrada de novos equipamentos e as retiradas pelos funcionários.</p>
+  </a>
+</div>
+{% endblock %}

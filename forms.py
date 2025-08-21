@@ -1,6 +1,8 @@
+# forms.py
+
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField
-from wtforms.validators import DataRequired, Optional, Email
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField, IntegerField
+from wtforms.validators import DataRequired, Optional, Email, NumberRange
 
 class LoginForm(FlaskForm):
     username = StringField("Usuário", validators=[DataRequired()])
@@ -103,7 +105,6 @@ class EmployeeDocForm(FlaskForm):
     arquivo = FileField("Arquivo (PDF/JPG/PNG)", validators=[Optional()])
     submit = SubmitField("Enviar")
 
-# --- NOVO FORMULÁRIO ADICIONADO ---
 class CustomerForm(FlaskForm):
     tipo_pessoa = SelectField("Tipo", choices=[('PF', 'Pessoa Física'), ('PJ', 'Pessoa Jurídica')], default='PF', validators=[DataRequired()])
     nome_razao_social = StringField("Nome / Razão Social", validators=[DataRequired()])
@@ -119,3 +120,35 @@ class CustomerForm(FlaskForm):
     uf = StringField("UF")
     ativo = BooleanField("Ativo", default=True)
     submit = SubmitField("Salvar")
+
+class FornecedorForm(FlaskForm):
+    nome = StringField('Nome do Fornecedor', validators=[DataRequired()])
+    cnpj = StringField('CNPJ')
+    submit = SubmitField('Salvar')
+
+class EPIForm(FlaskForm):
+    nome = StringField('Nome do Equipamento', validators=[DataRequired()])
+    ca = StringField('C.A. (Certificado de Aprovação)')
+    fornecedor_id = SelectField('Fornecedor', coerce=int, validators=[Optional()])
+    submit = SubmitField('Salvar')
+
+# --- INÍCIO: NOVOS FORMULÁRIOS DE MOVIMENTAÇÃO DE EPI ---
+
+class EPIEntradaForm(FlaskForm):
+    epi_id = SelectField('Equipamento (EPI)', coerce=int, validators=[DataRequired()])
+    quantidade = IntegerField('Quantidade', validators=[DataRequired(), NumberRange(min=1)])
+    submit = SubmitField('Registrar Entrada')
+
+class EPISaidaForm(FlaskForm):
+    epi_id = SelectField('Equipamento (EPI)', coerce=int, validators=[DataRequired(message="Selecione um EPI.")])
+    quantidade = IntegerField('Quantidade', validators=[DataRequired(message="Informe a quantidade."), NumberRange(min=1)])
+    
+    # Campo para selecionar funcionário da lista
+    employee_id = SelectField('Funcionário (Cadastrado)', coerce=int, validators=[Optional()])
+    
+    # Campo para digitar nome de terceiro
+    retirado_por_terceiro = StringField('Nome (Terceiro/Não cadastrado)')
+    
+    submit = SubmitField('Registrar Retirada e Gerar PDF')
+
+# --- FIM: NOVOS FORMULÁRIOS DE MOVIMENTAÇÃO DE EPI ---

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0">Histórico de Movimentações de EPIs</h3>
+  <div class="d-flex gap-2">
+    <a class="btn btn-success" href="{{ url_for('epi.entrada_new') }}">(+) Registrar Entrada</a>
+    <a class="btn btn-warning" href="{{ url_for('epi.saida_new') }}">(-) Registrar Retirada</a>
+  </div>
+</div>
+
+<table class="table table-sm table-striped">
+  <thead>
+    <tr>
+      <th style="width: 150px;">Data</th>
+      <th>Equipamento (EPI)</th>
+      <th class="text-center">Tipo</th>
+      <th class="text-center">Quantidade</th>
+      <th>Retirado por / Observação</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.data_movimentacao.strftime('%d/%m/%Y %H:%M') }}</td>
+      <td>{{ item.epi.nome }}</td>
+      <td class="text-center">
+        {% if item.tipo == 'ENTRADA' %}
+          <span class="badge bg-success">ENTRADA</span>
+        {% else %}
+          <span class="badge bg-danger">SAÍDA</span>
+        {% endif %}
+      </td>
+      <td class="text-center">{{ item.quantidade }}</td>
+      <td>{{ item.retirado_por }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="5">Nenhuma movimentação registrada.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<a href="{{ url_for('epi.index') }}" class="btn btn-outline-secondary mt-3">Voltar</a>
+{% endblock %}

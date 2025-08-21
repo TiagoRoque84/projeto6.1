@@ -45,6 +45,7 @@ def create_app():
     from blueprints.uploads.routes import uploads_bp
     from blueprints.dash.routes import dash_bp
     from blueprints.customers.routes import customers_bp
+    from blueprints.epi import epi_bp # MÓDULO NOVO
     
     # Registro dos blueprints
     app.register_blueprint(main_bp)
@@ -57,8 +58,8 @@ def create_app():
     app.register_blueprint(pdv_bp, url_prefix='/pdv')
     app.register_blueprint(uploads_bp)
     app.register_blueprint(dash_bp, url_prefix='/dash')
-    # O prefixo '/clientes' é definido aqui
     app.register_blueprint(customers_bp, url_prefix='/clientes')
+    app.register_blueprint(epi_bp, url_prefix='/epi') # MÓDULO NOVO
     
     print("Home ('/') apontada para dash.dashboard.")
     

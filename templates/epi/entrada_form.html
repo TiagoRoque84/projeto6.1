@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ title }}</h3>
+<p>Use esta tela para adicionar unidades de um EPI ao estoque.</p>
+<hr>
+<form method="post" class="card bg-light p-3">
+  {{ form.hidden_tag() }}
+  <div class="row">
+    <div class="col-md-8 mb-3">
+      {{ form.epi_id.label(class="form-label") }}
+      {{ form.epi_id(class="form-select") }}
+    </div>
+    <div class="col-md-4 mb-3">
+      {{ form.quantidade.label(class="form-label") }}
+      {{ form.quantidade(class="form-control", type="number", min="1") }}
+    </div>
+  </div>
+  
+  {{ form.submit(class="btn btn-success") }}
+  <a href="{{ url_for('epi.movimentacao_list') }}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+</form>
+{% endblock %}
