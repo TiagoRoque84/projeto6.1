@@ -19,7 +19,6 @@ def create_app():
     """
     Função factory para criar e configurar a instância da aplicação Flask.
     """
-    # Garante que o Flask procure templates na pasta 'templates'
     app = Flask(__name__, template_folder="templates")
     
     app.jinja_env.filters['norm_upload'] = normalize_upload_path
@@ -45,7 +44,8 @@ def create_app():
     from blueprints.uploads.routes import uploads_bp
     from blueprints.dash.routes import dash_bp
     from blueprints.customers.routes import customers_bp
-    from blueprints.epi import epi_bp # MÓDULO NOVO
+    from blueprints.epi import epi_bp
+    from blueprints.agendamentos import agendamentos_bp # MÓDULO NOVO
     
     # Registro dos blueprints
     app.register_blueprint(main_bp)
@@ -59,7 +59,8 @@ def create_app():
     app.register_blueprint(uploads_bp)
     app.register_blueprint(dash_bp, url_prefix='/dash')
     app.register_blueprint(customers_bp, url_prefix='/clientes')
-    app.register_blueprint(epi_bp, url_prefix='/epi') # MÓDULO NOVO
+    app.register_blueprint(epi_bp, url_prefix='/epi')
+    app.register_blueprint(agendamentos_bp, url_prefix='/agendamentos') # MÓDULO NOVO
     
     print("Home ('/') apontada para dash.dashboard.")
     

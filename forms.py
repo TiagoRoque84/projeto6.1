@@ -1,7 +1,9 @@
 # forms.py
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField, IntegerField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField, IntegerField, TextAreaField
+# Importa o campo de data e hora
+from wtforms.fields import DateTimeField
 from wtforms.validators import DataRequired, Optional, Email, NumberRange
 
 class LoginForm(FlaskForm):
@@ -132,8 +134,6 @@ class EPIForm(FlaskForm):
     fornecedor_id = SelectField('Fornecedor', coerce=int, validators=[Optional()])
     submit = SubmitField('Salvar')
 
-# --- INÍCIO: NOVOS FORMULÁRIOS DE MOVIMENTAÇÃO DE EPI ---
-
 class EPIEntradaForm(FlaskForm):
     epi_id = SelectField('Equipamento (EPI)', coerce=int, validators=[DataRequired()])
     quantidade = IntegerField('Quantidade', validators=[DataRequired(), NumberRange(min=1)])
@@ -142,13 +142,20 @@ class EPIEntradaForm(FlaskForm):
 class EPISaidaForm(FlaskForm):
     epi_id = SelectField('Equipamento (EPI)', coerce=int, validators=[DataRequired(message="Selecione um EPI.")])
     quantidade = IntegerField('Quantidade', validators=[DataRequired(message="Informe a quantidade."), NumberRange(min=1)])
-    
-    # Campo para selecionar funcionário da lista
     employee_id = SelectField('Funcionário (Cadastrado)', coerce=int, validators=[Optional()])
-    
-    # Campo para digitar nome de terceiro
     retirado_por_terceiro = StringField('Nome (Terceiro/Não cadastrado)')
-    
     submit = SubmitField('Registrar Retirada e Gerar PDF')
 
-# --- FIM: NOVOS FORMULÁRIOS DE MOVIMENTAÇÃO DE EPI ---
+class ServicoForm(FlaskForm):
+    nome = StringField('Nome do Serviço', validators=[DataRequired(message="O nome do serviço é obrigatório.")])
+    submit = SubmitField('Salvar')
+
+# --- NOVO FORMULÁRIO DE AGENDAMENTO ---
+class AgendamentoForm(FlaskForm):
+    customer_id = SelectField('Cliente', coerce=int, validators=[DataRequired(message="É preciso selecionar um cliente.")])
+    servico_id = SelectField('Serviço', coerce=int, validators=[DataRequired(message="É preciso selecionar um serviço.")])
+    data_hora = DateTimeField('Data e Hora', format='%Y-%m-%dT%H:%M', validators=[DataRequired(message="A data e hora são obrigatórias.")])
+    local = StringField('Local da Coleta/Serviço', validators=[DataRequired(message="O local é obrigatório.")])
+    observacao = TextAreaField('Observações')
+    status = SelectField('Status', choices=[('Agendado', 'Agendado'), ('Realizado', 'Realizado'), ('Cancelado', 'Cancelado')], default='Agendado')
+    submit = SubmitField('Salvar Agendamento')

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 
+{# Macro genérica para documentos vencidos/a vencer #}
 {% macro render_modal(modal_id, title, items, is_employee=True) %}
 <div class="modal fade" id="{{ modal_id }}" tabindex="-1">
   <div class="modal-dialog modal-lg">
@@ -58,6 +59,52 @@
 </div>
 {% endmacro %}
 
+{# --- INÍCIO: NOVA MACRO PARA OS MODAIS DE AGENDAMENTO --- #}
+{% macro render_agendamento_modal(modal_id, title, items) %}
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        {% if items %}
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              <th>Data/Hora</th>
+              <th>Cliente</th>
+              <th>Serviço</th>
+              <th>Local</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>{{ item.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+              <td>{{ item.customer.nome_razao_social }}</td>
+              <td>{{ item.servico.nome }}</td>
+              <td>{{ item.local }}</td>
+              <td class="text-end"><a href="{{ url_for('agendamentos.agendamento_edit', agendamento_id=item.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">Ver Agendamento</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p>Nenhum agendamento encontrado.</p>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+{# --- FIM: NOVA MACRO --- #}
+
 
 <div class="row g-3">
     <div class="col-md-3">
@@ -83,6 +130,27 @@
 </div>
 
 <hr class="my-4">
+
+<h5>Agendamentos</h5>
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card border-danger" role="button" data-bs-toggle="modal" data-bs-target="#agendamentosAtrasadosModal">
+            <div class="card-body">
+                <div class="text-muted">Agendamentos Atrasados</div>
+                <div class="display-6">{{ agendamentos_atrasados }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-primary" role="button" data-bs-toggle="modal" data-bs-target="#agendamentosProximosModal">
+            <div class="card-body">
+                <div class="text-muted">Próximos Agendamentos (7d)</div>
+                <div class="display-6">{{ agendamentos_proximos }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+<hr class="my-4">
 <h5>Vencimentos de Colaboradores (Ativos)</h5>
 <div class="row g-3">
     <div class="col-md-3"><div class="card border-danger" role="button" data-bs-toggle="modal" data-bs-target="#asoVencidosModal"><div class="card-body"><div class="text-muted">ASOs Vencidos</div><div class="display-6">{{ aso_venc }}</div></div></div></div>
@@ -93,15 +161,19 @@
     <div class="col-md-3 mt-3"><div class="card border-warning" role="button" data-bs-toggle="modal" data-bs-target="#toxAVencerModal"><div class="card-body"><div class="text-muted">Tóxicos a Vencer (30d)</div><div class="display-6">{{ tox_avencer }}</div></div></div></div>
 </div>
 
+{# Modais de Documentos e Colaboradores #}
 {{ render_modal('docsVencidosModal', 'Documentos de Empresa Vencidos', docs_venc_list, is_employee=False) }}
 {{ render_modal('docsAVencerModal', 'Documentos de Empresa a Vencer (30d)', docs_avencer_list, is_employee=False) }}
-
 {{ render_modal('asoVencidosModal', 'ASOs Vencidos', aso_venc_list) }}
 {{ render_modal('asoAVencerModal', 'ASOs a Vencer (30d)', aso_avencer_list) }}
-
 {{ render_modal('cnhVencidasModal', 'CNHs Vencidas', cnh_venc_list) }}
 {{ render_modal('cnhAVencerModal', 'CNHs a Vencer (30d)', cnh_avencer_list) }}
-
 {{ render_modal('toxVencidosModal', 'Exames Toxicológicos Vencidos', tox_venc_list) }}
 {{ render_modal('toxAVencerModal', 'Exames Toxicológicos a Vencer (30d)', tox_avencer_list) }}
+
+{# --- INÍCIO: NOVOS MODAIS DE AGENDAMENTO --- #}
+{{ render_agendamento_modal('agendamentosAtrasadosModal', 'Agendamentos Atrasados', agendamentos_atrasados_list) }}
+{{ render_agendamento_modal('agendamentosProximosModal', 'Próximos Agendamentos (7 dias)', agendamentos_proximos_list) }}
+{# --- FIM: NOVOS MODAIS --- #}
+
 {% endblock %}

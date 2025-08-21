@@ -136,27 +136,20 @@ class EmployeeDocument(db.Model):
 class CashMovement(db.Model):
     __tablename__ = "cash_movement"
     id = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.String(20), nullable=False)  # VENDA, SANGRIA, RETIRADA, PAGAMENTO
+    tipo = db.Column(db.String(20), nullable=False)
     valor = db.Column(db.Numeric(10,2), nullable=False)
-    pagamento = db.Column(db.String(20), nullable=False)  # DINHEIRO, PIX, CARTAO, CONTA
+    pagamento = db.Column(db.String(20), nullable=False)
     descricao = db.Column(db.String(255))
     ticket_ref = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
-
-    # --- Novos campos para Pesagem ---
     placa = db.Column(db.String(10))
     material = db.Column(db.String(100))
-    peso = db.Column(db.Numeric(10, 3)) # Ex: 10.500 Toneladas
-    
-    # --- Controle da Conta Corrente ---
-    status = db.Column(db.String(20), default='Pendente') # Pendente, Pago
+    peso = db.Column(db.Numeric(10, 3))
+    status = db.Column(db.String(20), default='Pendente')
     pagamento_id = db.Column(db.Integer, db.ForeignKey('cash_movement.id'), nullable=True)
-    
-    # Relacionamento para ver os itens que um pagamento quitou
     pagamentos_quitados = db.relationship('CashMovement', backref=db.backref('pagamento_de', remote_side=[id]))
-
 
 class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -173,10 +166,7 @@ class Customer(db.Model):
     cidade = db.Column(db.String(100))
     uf = db.Column(db.String(2))
     ativo = db.Column(db.Boolean, default=True)
-
     movimentos = db.relationship('CashMovement', backref='customer', lazy=True, foreign_keys=[CashMovement.customer_id])
-
-# --- INÍCIO: NOVOS MODELOS PARA O MÓDULO DE EPI ---
 
 class Fornecedor(db.Model):
     __tablename__ = 'fornecedor'
@@ -189,27 +179,40 @@ class EPI(db.Model):
     __tablename__ = 'epi'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(200), nullable=False)
-    ca = db.Column(db.String(50))  # Certificado de Aprovação
+    ca = db.Column(db.String(50))
     fornecedor_id = db.Column(db.Integer, db.ForeignKey('fornecedor.id'), nullable=True)
-    
-    # Campo para controlar o estoque atual
     estoque = db.Column(db.Integer, default=0)
 
 class MovimentacaoEPI(db.Model):
     __tablename__ = 'movimentacao_epi'
     id = db.Column(db.Integer, primary_key=True)
     epi_id = db.Column(db.Integer, db.ForeignKey('epi.id'), nullable=False)
-    tipo = db.Column(db.String(20), nullable=False)  # 'ENTRADA' ou 'SAIDA'
+    tipo = db.Column(db.String(20), nullable=False)
     quantidade = db.Column(db.Integer, nullable=False)
     data_movimentacao = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Para quem foi entregue
     retirado_por = db.Column(db.String(200), nullable=False)
-    
-    # Vínculo opcional com o cadastro de funcionários
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
-    
     epi = db.relationship('EPI', backref='movimentacoes')
     employee = db.relationship('Employee')
 
-# --- FIM: NOVOS MODELOS PARA O MÓDULO DE EPI ---
+# --- INÍCIO: NOVOS MODELOS PARA O MÓDULO DE AGENDAMENTO ---
+
+class Servico(db.Model):
+    __tablename__ = 'servico'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(150), nullable=False, unique=True)
+
+class Agendamento(db.Model):
+    __tablename__ = 'agendamento'
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    servico_id = db.Column(db.Integer, db.ForeignKey('servico.id'), nullable=False)
+    data_hora = db.Column(db.DateTime, nullable=False)
+    local = db.Column(db.String(300))
+    observacao = db.Column(db.Text)
+    status = db.Column(db.String(50), default='Agendado') # Ex: Agendado, Realizado, Cancelado
+    
+    customer = db.relationship('Customer', backref='agendamentos')
+    servico = db.relationship('Servico', backref='agendamentos')
+
+# --- FIM: NOVOS MODELOS PARA O MÓDULO DE AGENDAMENTO ---

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0">Agendamentos de Coletas e Serviços</h3>
+  <a class="btn btn-success" href="{{ url_for('agendamentos.agendamento_new') }}">Novo Agendamento</a>
+</div>
+
+<table class="table table-striped table-hover">
+  <thead>
+    <tr>
+      <th style="width: 15%;">Data e Hora</th>
+      <th>Cliente</th>
+      <th>Serviço</th>
+      <th>Local</th>
+      <th class="text-center" style="width: 10%;">Status</th>
+      <th style="width: 150px;"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+      <td>{{ item.customer.nome_razao_social }}</td>
+      <td>{{ item.servico.nome }}</td>
+      <td>{{ item.local }}</td>
+      <td class="text-center">
+        {% if item.status == 'Agendado' %}
+          <span class="badge bg-primary">{{ item.status }}</span>
+        {% elif item.status == 'Realizado' %}
+          <span class="badge bg-success">{{ item.status }}</span>
+        {% elif item.status == 'Cancelado' %}
+          <span class="badge bg-danger">{{ item.status }}</span>
+        {% else %}
+          <span class="badge bg-secondary">{{ item.status }}</span>
+        {% endif %}
+      </td>
+      <td class="text-end">
+        <div class="d-flex gap-2 justify-content-end">
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('agendamentos.agendamento_edit', agendamento_id=item.id) }}">Editar</a>
+          <form method="post" action="{{ url_for('agendamentos.agendamento_delete', agendamento_id=item.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este agendamento?');">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="6" class="text-center">Nenhum agendamento encontrado.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<a href="{{ url_for('agendamentos.index') }}" class="btn btn-outline-secondary mt-3">Voltar</a>
+{% endblock %}

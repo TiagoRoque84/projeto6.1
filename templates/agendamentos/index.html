@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Módulo de Agendamentos</h3>
+<p>Gerencie os serviços e as coletas agendadas.</p>
+<hr>
+<div class="list-group">
+  <a href="{{ url_for('agendamentos.agendamento_new') }}" class="list-group-item list-group-item-action">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">Novo Agendamento</h5>
+    </div>
+    <p class="mb-1">Agendar uma nova coleta ou serviço para um cliente.</p>
+  </a>
+  <a href="{{ url_for('agendamentos.agendamento_list') }}" class="list-group-item list-group-item-action">
+      <div class="d-flex w-100 justify-content-between">
+        <h5 class="mb-1">Visualizar Agenda</h5>
+      </div>
+      <p class="mb-1">Ver todos os agendamentos em formato de lista.</p>
+    </a>
+  <a href="{{ url_for('agendamentos.servico_list') }}" class="list-group-item list-group-item-action">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">Tipos de Serviço</h5>
+    </div>
+    <p class="mb-1">Cadastrar os tipos de serviços prestados pela empresa.</p>
+  </a>
+</div>
+{% endblock %}

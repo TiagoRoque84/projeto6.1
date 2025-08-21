@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ title }}</h3>
+<hr>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div class="row">
+    <div class="col-md-12 mb-3">
+      {{ form.nome.label(class="form-label") }}
+      {{ form.nome(class="form-control") }}
+    </div>
+  </div>
+  
+  {{ form.submit(class="btn btn-primary") }}
+  <a href="{{ url_for('agendamentos.servico_list') }}" class="btn btn-outline-secondary">Cancelar</a>
+</form>
+{% endblock %}
