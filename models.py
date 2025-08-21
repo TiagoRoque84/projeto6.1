@@ -9,8 +9,8 @@ def now_sao_paulo():
     """Retorna o horário atual no fuso de São Paulo."""
     return datetime.now(pytz.timezone('America/Sao_Paulo'))
 
-
 class AuditLog(db.Model):
+    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.String(120))
     action = db.Column(db.String(50))
@@ -20,16 +20,17 @@ class AuditLog(db.Model):
     created_at = db.Column(db.DateTime, default=now_sao_paulo)
 
 class User(db.Model, UserMixin):
+    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), default="admin")
     active = db.Column(db.Boolean, default=True)
     nome_completo = db.Column(db.String(200), default="")
-
     def get_id(self): return str(self.id)
 
 class Company(db.Model):
+    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     razao_social = db.Column(db.String(200), nullable=False)
     nome_fantasia = db.Column(db.String(200), default="")
@@ -45,16 +46,15 @@ class Company(db.Model):
     ativa = db.Column(db.Boolean, default=True)
     alert_email = db.Column(db.String(500), default="")
     alert_whatsapp = db.Column(db.String(500), default="")
-    # --- NOVO CAMPO ADICIONADO ---
     is_default = db.Column(db.Boolean, default=False)
 
-# ... (o resto do arquivo models.py continua exatamente igual) ...
-# (Employee, DocumentType, Document, etc., não mudam)
 class Funcao(db.Model):
+    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
 
 class Employee(db.Model):
+    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey("company.id"))
     funcao_id = db.Column(db.Integer, db.ForeignKey("funcao.id"))
@@ -94,21 +94,20 @@ class Employee(db.Model):
     escolaridade = db.Column(db.String(40))
     company = db.relationship("Company")
     funcao = db.relationship("Funcao")
-
     def tempo_de_casa(self):
-        if not self.data_admissao:
-            return ""
+        if not self.data_admissao: return ""
         hoje = date.today()
         dias = (hoje - self.data_admissao).days
-        anos = dias // 365
-        meses = (dias % 365) // 30
+        anos, meses = dias // 365, (dias % 365) // 30
         return f"{anos}a {meses}m" if anos or meses else f"{dias}d"
 
 class DocumentType(db.Model):
+    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
 
 class Document(db.Model):
+    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey("company.id"))
     tipo_id = db.Column(db.Integer, db.ForeignKey("document_type.id"))
@@ -122,19 +121,16 @@ class Document(db.Model):
     created_at = db.Column(db.DateTime, default=now_sao_paulo)
     company = db.relationship("Company")
     tipo = db.relationship("DocumentType")
-
     @property
     def status(self):
-        if not self.data_vencimento:
-            return "Sem vencimento"
+        if not self.data_vencimento: return "Sem vencimento"
         hoje = date.today()
-        if self.data_vencimento < hoje:
-            return "Vencido"
-        if (self.data_vencimento - hoje).days <= 30:
-            return "A vencer"
+        if self.data_vencimento < hoje: return "Vencido"
+        if (self.data_vencimento - hoje).days <= 30: return "A vencer"
         return "Vigente"
 
 class EmployeeDocument(db.Model):
+    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey("employee.id"), nullable=False, index=True)
     tipo = db.Column(db.String(80))
@@ -144,6 +140,7 @@ class EmployeeDocument(db.Model):
     employee = db.relationship("Employee", backref="documentos")
 
 class CashMovement(db.Model):
+    # ... (código existente)
     __tablename__ = "cash_movement"
     id = db.Column(db.Integer, primary_key=True)
     tipo = db.Column(db.String(20), nullable=False)
@@ -162,6 +159,7 @@ class CashMovement(db.Model):
     pagamentos_quitados = db.relationship('CashMovement', backref=db.backref('pagamento_de', remote_side=[id]))
 
 class Customer(db.Model):
+    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     tipo_pessoa = db.Column(db.String(2), default='PF')
     nome_razao_social = db.Column(db.String(200), nullable=False)
@@ -179,6 +177,7 @@ class Customer(db.Model):
     movimentos = db.relationship('CashMovement', backref='customer', lazy=True, foreign_keys=[CashMovement.customer_id])
 
 class Fornecedor(db.Model):
+    # ... (código existente)
     __tablename__ = 'fornecedor'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(200), nullable=False)
@@ -186,6 +185,7 @@ class Fornecedor(db.Model):
     epis = db.relationship('EPI', backref='fornecedor', lazy=True)
 
 class EPI(db.Model):
+    # ... (código existente)
     __tablename__ = 'epi'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(200), nullable=False)
@@ -194,6 +194,7 @@ class EPI(db.Model):
     estoque = db.Column(db.Integer, default=0)
 
 class MovimentacaoEPI(db.Model):
+    # ... (código existente)
     __tablename__ = 'movimentacao_epi'
     id = db.Column(db.Integer, primary_key=True)
     epi_id = db.Column(db.Integer, db.ForeignKey('epi.id'), nullable=False)
@@ -206,19 +207,25 @@ class MovimentacaoEPI(db.Model):
     employee = db.relationship('Employee')
 
 class Servico(db.Model):
+    # ... (código existente)
     __tablename__ = 'servico'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False, unique=True)
 
+# --- MODELO DE AGENDAMENTO ATUALIZADO ---
 class Agendamento(db.Model):
     __tablename__ = 'agendamento'
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    # Agora o cliente é opcional
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
     servico_id = db.Column(db.Integer, db.ForeignKey('servico.id'), nullable=False)
     data_hora = db.Column(db.DateTime, nullable=False)
     local = db.Column(db.String(300))
     observacao = db.Column(db.Text)
     status = db.Column(db.String(50), default='Agendado')
+    
+    # Novo campo para o nome do visitante
+    visitante_nome = db.Column(db.String(200), nullable=True)
     
     customer = db.relationship('Customer', backref='agendamentos')
     servico = db.relationship('Servico', backref='agendamentos')

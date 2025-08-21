@@ -9,18 +9,19 @@
   <thead>
     <tr>
       <th style="width: 15%;">Data e Hora</th>
-      <th>Cliente</th>
+      <th>Cliente / Visitante</th> {# Título da coluna ajustado #}
       <th>Serviço</th>
       <th>Local</th>
       <th class="text-center" style="width: 10%;">Status</th>
-      <th style="width: 200px;"></th> {# Aumentado o espaço para os botões #}
+      <th style="width: 200px;"></th>
     </tr>
   </thead>
   <tbody>
     {% for item in items %}
     <tr>
       <td>{{ item.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
-      <td>{{ item.customer.nome_razao_social }}</td>
+      {# Lógica para mostrar o nome do cliente ou do visitante #}
+      <td>{{ item.customer.nome_razao_social if item.customer else (item.visitante_nome or '-') }}</td>
       <td>{{ item.servico.nome }}</td>
       <td>{{ item.local }}</td>
       <td class="text-center">

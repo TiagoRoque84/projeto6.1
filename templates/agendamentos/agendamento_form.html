@@ -6,14 +6,22 @@
   {{ form.hidden_tag() }}
   <div class="row">
     <div class="col-md-6 mb-3">
+      {{ form.servico_id.label(class="form-label") }}
+      {{ form.servico_id(class="form-select", id="servico_select") }}
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-6 mb-3" id="campo_cliente">
       {{ form.customer_id.label(class="form-label") }}
       {{ form.customer_id(class="form-select") }}
     </div>
-    <div class="col-md-6 mb-3">
-      {{ form.servico_id.label(class="form-label") }}
-      {{ form.servico_id(class="form-select") }}
+    <div class="col-md-6 mb-3" id="campo_visitante" style="display: none;">
+      {{ form.visitante_nome.label(class="form-label") }}
+      {{ form.visitante_nome(class="form-control") }}
     </div>
   </div>
+  
   <div class="row">
     <div class="col-md-3 mb-3">
       {{ form.data_hora.label(class="form-label") }}
@@ -41,4 +49,35 @@
     <a href="{{ url_for('agendamentos.agendamento_list') }}" class="btn btn-outline-secondary">Cancelar</a>
   </div>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const servicoSelect = document.getElementById('servico_select');
+  const campoCliente = document.getElementById('campo_cliente');
+  const campoVisitante = document.getElementById('campo_visitante');
+  const inputVisitante = document.querySelector('[name=visitante_nome]');
+  const selectCliente = document.querySelector('[name=customer_id]');
+
+  function toggleFields() {
+    // Pega o texto da opção selecionada, remove espaços em branco das pontas e converte para minúsculas
+    const selectedText = servicoSelect.options[servicoSelect.selectedIndex].text.trim().toLowerCase();
+    
+    if (selectedText === 'visita') {
+      campoCliente.style.display = 'none';
+      selectCliente.value = ''; // Limpa a seleção do cliente para não ser enviada
+      campoVisitante.style.display = 'block';
+    } else {
+      campoCliente.style.display = 'block';
+      campoVisitante.style.display = 'none';
+      inputVisitante.value = ''; // Limpa o nome do visitante para não ser enviado
+    }
+  }
+
+  // Adiciona o listener para o evento de mudança
+  servicoSelect.addEventListener('change', toggleFields);
+  
+  // Executa a função uma vez ao carregar a página para ajustar o estado inicial
+  toggleFields();
+});
+</script>
 {% endblock %}

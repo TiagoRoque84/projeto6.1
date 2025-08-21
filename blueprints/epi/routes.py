@@ -5,20 +5,18 @@ from flask_login import login_required
 from . import epi_bp
 from models import db, Fornecedor, EPI, MovimentacaoEPI, Employee
 from forms import FornecedorForm, EPIForm, EPIEntradaForm, EPISaidaForm
-from pdf_reports import epi_saida_pdf
+from pdf_reports import epi_saida_pdf, epi_summary_pdf # Importa a nova função de relatório
+from datetime import datetime, date
 
-# --- TELA PRINCIPAL DO MÓDULO DE EPI ---
+# ... (rotas de index, fornecedores e cadastro de EPIs continuam iguais) ...
 @epi_bp.route('/')
 @login_required
 def index():
-    """Renderiza o menu principal do módulo de EPIs."""
     return render_template("epi/index.html")
 
-# --- ROTAS PARA FORNECEDORES ---
 @epi_bp.route('/fornecedores')
 @login_required
 def fornecedor_list():
-    """Lista todos os fornecedores."""
     fornecedores = Fornecedor.query.order_by(Fornecedor.nome).all()
     return render_template('epi/fornecedor_list.html', items=fornecedores)
 
@@ -28,8 +26,7 @@ def fornecedor_new():
     form = FornecedorForm()
     if form.validate_on_submit():
         novo_fornecedor = Fornecedor(nome=form.nome.data, cnpj=form.cnpj.data)
-        db.session.add(novo_fornecedor)
-        db.session.commit()
+        db.session.add(novo_fornecedor); db.session.commit()
         flash('Fornecedor cadastrado com sucesso!', 'success')
         return redirect(url_for('epi.fornecedor_list'))
     return render_template('epi/fornecedor_form.html', form=form, title='Novo Fornecedor')
@@ -51,12 +48,10 @@ def fornecedor_edit(fornecedor_id):
 @login_required
 def fornecedor_delete(fornecedor_id):
     fornecedor = Fornecedor.query.get_or_404(fornecedor_id)
-    db.session.delete(fornecedor)
-    db.session.commit()
+    db.session.delete(fornecedor); db.session.commit()
     flash('Fornecedor excluído com sucesso.', 'success')
     return redirect(url_for('epi.fornecedor_list'))
 
-# --- ROTAS PARA CADASTRO DE EPIs ---
 @epi_bp.route('/epis')
 @login_required
 def epi_list():
@@ -71,8 +66,7 @@ def epi_new():
     if form.validate_on_submit():
         fornecedor_id = form.fornecedor_id.data if form.fornecedor_id.data != 0 else None
         novo_epi = EPI(nome=form.nome.data, ca=form.ca.data, fornecedor_id=fornecedor_id)
-        db.session.add(novo_epi)
-        db.session.commit()
+        db.session.add(novo_epi); db.session.commit()
         flash('EPI cadastrado com sucesso!', 'success')
         return redirect(url_for('epi.epi_list'))
     return render_template('epi/epi_form.html', form=form, title='Novo EPI')
@@ -96,109 +90,124 @@ def epi_edit(epi_id):
 @login_required
 def epi_delete(epi_id):
     epi = EPI.query.get_or_404(epi_id)
-    db.session.delete(epi)
-    db.session.commit()
+    db.session.delete(epi); db.session.commit()
     flash('EPI excluído com sucesso.', 'success')
     return redirect(url_for('epi.epi_list'))
 
-# --- INÍCIO: NOVAS ROTAS DE MOVIMENTAÇÃO DE ESTOQUE ---
-
+# --- ROTA DE MOVIMENTAÇÕES ATUALIZADA ---
 @epi_bp.route('/movimentacoes')
 @login_required
 def movimentacao_list():
-    """Exibe o histórico de todas as entradas e saídas."""
     movimentacoes = MovimentacaoEPI.query.order_by(MovimentacaoEPI.data_movimentacao.desc()).all()
     return render_template('epi/movimentacao_list.html', items=movimentacoes)
 
+# ... (rotas de entrada_new e saida_new continuam iguais) ...
 @epi_bp.route('/entrada', methods=['GET', 'POST'])
 @login_required
 def entrada_new():
-    """Formulário para registrar entrada de EPIs no estoque."""
     form = EPIEntradaForm()
     form.epi_id.choices = [(e.id, f"{e.nome} (Estoque atual: {e.estoque})") for e in EPI.query.order_by(EPI.nome).all()]
-    
     if form.validate_on_submit():
         epi = EPI.query.get_or_404(form.epi_id.data)
         quantidade = form.quantidade.data
-        
-        # Cria o registro da movimentação
-        nova_movimentacao = MovimentacaoEPI(
-            epi_id=epi.id,
-            tipo='ENTRADA',
-            quantidade=quantidade,
-            retirado_por='ENTRADA NO ESTOQUE' # Informação padrão para entradas
-        )
+        nova_movimentacao = MovimentacaoEPI(epi_id=epi.id, tipo='ENTRADA', quantidade=quantidade, retirado_por='ENTRADA NO ESTOQUE')
         db.session.add(nova_movimentacao)
-        
-        # Atualiza o estoque do EPI
         epi.estoque += quantidade
-        
         db.session.commit()
         flash(f'{quantidade} unidade(s) de "{epi.nome}" adicionada(s) ao estoque.', 'success')
         return redirect(url_for('epi.movimentacao_list'))
-
     return render_template('epi/entrada_form.html', form=form, title='Registrar Entrada de EPI')
 
 @epi_bp.route('/saida', methods=['GET', 'POST'])
 @login_required
 def saida_new():
-    """Formulário para registrar a retirada de EPIs por um funcionário."""
     form = EPISaidaForm()
-    # Popula os selects do formulário
     form.epi_id.choices = [(e.id, f"{e.nome} (Estoque: {e.estoque})") for e in EPI.query.order_by(EPI.nome).all()]
     form.employee_id.choices = [(0, 'Selecionar funcionário...')] + [(emp.id, emp.nome) for emp in Employee.query.filter_by(ativo=True).order_by(Employee.nome).all()]
-
     if form.validate_on_submit():
         epi = EPI.query.get_or_404(form.epi_id.data)
         quantidade = form.quantidade.data
         employee_id = form.employee_id.data if form.employee_id.data != 0 else None
         retirado_por_terceiro = form.retirado_por_terceiro.data.strip()
-
-        # Validações
         if not employee_id and not retirado_por_terceiro:
             flash('É necessário selecionar um funcionário ou informar o nome do terceiro.', 'danger')
             return render_template('epi/saida_form.html', form=form, title='Registrar Retirada de EPI')
-        
         if epi.estoque < quantidade:
             flash(f'Estoque insuficiente para "{epi.nome}". Disponível: {epi.estoque}.', 'danger')
             return render_template('epi/saida_form.html', form=form, title='Registrar Retirada de EPI')
-
-        # Define quem retirou
-        retirado_por_nome = ""
-        employee = None
+        retirado_por_nome, employee = "", None
         if employee_id:
             employee = Employee.query.get(employee_id)
             retirado_por_nome = employee.nome
         else:
             retirado_por_nome = retirado_por_terceiro
-
-        # Cria o registro da movimentação
-        nova_movimentacao = MovimentacaoEPI(
-            epi_id=epi.id,
-            tipo='SAIDA',
-            quantidade=quantidade,
-            retirado_por=retirado_por_nome,
-            employee_id=employee_id
-        )
+        nova_movimentacao = MovimentacaoEPI(epi_id=epi.id, tipo='SAIDA', quantidade=quantidade, retirado_por=retirado_por_nome, employee_id=employee_id)
         db.session.add(nova_movimentacao)
-        
-        # Atualiza o estoque
         epi.estoque -= quantidade
-        
         db.session.commit()
-        
-        # Gera o PDF
         buffer = io.BytesIO()
         epi_saida_pdf(buffer, current_app, nova_movimentacao)
         buffer.seek(0)
-        
-        return send_file(
-            buffer,
-            as_attachment=True,
-            download_name=f'comprovante_epi_{nova_movimentacao.id}.pdf',
-            mimetype='application/pdf'
-        )
-
+        return send_file(buffer, as_attachment=True, download_name=f'comprovante_epi_{nova_movimentacao.id}.pdf', mimetype='application/pdf')
     return render_template('epi/saida_form.html', form=form, title='Registrar Retirada de EPI')
 
-# --- FIM: NOVAS ROTAS DE MOVIMENTAÇÃO DE ESTOQUE ---
+# --- INÍCIO: NOVAS ROTAS PARA RELATÓRIO E REIMPRESSÃO ---
+
+@epi_bp.route('/movimentacoes/relatorio')
+@login_required
+def relatorio_epi():
+    start_date_str = request.args.get('data_inicio')
+    end_date_str = request.args.get('data_fim')
+
+    if not start_date_str or not end_date_str:
+        flash("Por favor, selecione a data de início e a data de fim para o relatório.", "danger")
+        return redirect(url_for('epi.movimentacao_list'))
+
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash("Formato de data inválido.", "danger")
+        return redirect(url_for('epi.movimentacao_list'))
+
+    start_of_day = datetime.combine(start_date, datetime.min.time())
+    end_of_day = datetime.combine(end_date, datetime.max.time())
+    
+    movements = MovimentacaoEPI.query.filter(
+        MovimentacaoEPI.data_movimentacao >= start_of_day,
+        MovimentacaoEPI.data_movimentacao <= end_of_day
+    ).order_by(MovimentacaoEPI.data_movimentacao.asc()).all()
+
+    if not movements:
+        flash(f"Nenhuma movimentação de EPI encontrada para o período de {start_date.strftime('%d/%m/%Y')} a {end_date.strftime('%d/%m/%Y')}.", "info")
+        return redirect(url_for('epi.movimentacao_list'))
+
+    buffer = io.BytesIO()
+    epi_summary_pdf(buffer, None, movements, start_date, end_date)
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f'relatorio_epi_{start_date.strftime("%Y-%m-%d")}_a_{end_date.strftime("%Y-%m-%d")}.pdf',
+        mimetype='application/pdf'
+    )
+
+@epi_bp.route('/reimprimir_retirada/<int:mov_id>')
+@login_required
+def reimprimir_retirada(mov_id):
+    mov = MovimentacaoEPI.query.get_or_404(mov_id)
+    if mov.tipo != 'SAIDA':
+        flash("A reimpressão está disponível apenas para movimentações de SAÍDA.", "warning")
+        return redirect(url_for('epi.movimentacao_list'))
+
+    buffer = io.BytesIO()
+    epi_saida_pdf(buffer, current_app, mov)
+    buffer.seek(0)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f'comprovante_epi_{mov.id}.pdf',
+        mimetype='application/pdf'
+    )
+# --- FIM: NOVAS ROTAS ---

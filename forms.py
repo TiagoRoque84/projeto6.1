@@ -5,6 +5,7 @@ from wtforms import StringField, PasswordField, SubmitField, BooleanField, Selec
 from wtforms.fields import DateTimeField
 from wtforms.validators import DataRequired, Optional, Email, NumberRange
 
+# ... (todos os outros forms continuam iguais) ...
 class LoginForm(FlaskForm):
     username = StringField("Usuário", validators=[DataRequired()])
     password = PasswordField("Senha", validators=[DataRequired()])
@@ -28,7 +29,6 @@ class CompanyForm(FlaskForm):
     alert_whatsapp = StringField("WhatsApp(s) para alertas (+55DDDNUM; separados por ;)")
     submit = SubmitField("Salvar")
 
-# ... (outros forms como FuncaoForm, EmployeeForm, etc. continuam aqui) ...
 class FuncaoForm(FlaskForm):
     nome = StringField("Nome", validators=[DataRequired()])
     submit = SubmitField("Salvar")
@@ -153,14 +153,18 @@ class ServicoForm(FlaskForm):
 
 # --- FORMULÁRIO DE AGENDAMENTO ATUALIZADO ---
 class AgendamentoForm(FlaskForm):
-    customer_id = SelectField('Cliente', coerce=int, validators=[DataRequired(message="É preciso selecionar um cliente.")])
+    # Cliente agora é opcional
+    customer_id = SelectField('Cliente', coerce=int, validators=[Optional()])
     servico_id = SelectField('Serviço', coerce=int, validators=[DataRequired(message="É preciso selecionar um serviço.")])
+    
+    # Novo campo para visitante
+    visitante_nome = StringField('Nome do Visitante')
+    
     data_hora = DateTimeField('Data e Hora', format='%Y-%m-%dT%H:%M', validators=[DataRequired(message="A data e hora são obrigatórias.")])
     local = StringField('Local da Coleta/Serviço', validators=[DataRequired(message="O local é obrigatório.")])
     observacao = TextAreaField('Observações')
     status = SelectField('Status', choices=[('Agendado', 'Agendado'), ('Realizado', 'Realizado'), ('Cancelado', 'Cancelado')], default='Agendado')
     submit = SubmitField('Apenas Salvar')
-    # Novo botão
     submit_and_print = SubmitField('Salvar e Imprimir')
 
 class MovementForm(FlaskForm):
