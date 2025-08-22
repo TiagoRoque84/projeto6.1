@@ -4,18 +4,37 @@
   <h3 class="mb-0">Distribuição de Holerites</h3>
 </div>
 
-<div class="alert alert-info">
-    <b>Como funciona:</b>
-    <ol class="mb-0">
-        <li>Coloque os arquivos PDF dos holerites na pasta <code>uploads/holerites/</code>.</li>
-        <li>O nome de cada arquivo deve ser <strong>exatamente</strong> o nome completo do funcionário (Ex: <code>José Carlos da Silva.pdf</code>).</li>
-        <li>Clique no botão abaixo para iniciar o envio. Os arquivos enviados com sucesso serão movidos para a pasta <code>uploads/holerites/enviados/</code>.</li>
-    </ol>
-</div>
-
-<div class="card">
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>Passo 1: Dividir PDF com vários holerites</strong>
+    </div>
     <div class="card-body">
-        <h5 class="card-title">Arquivos Pendentes de Envio ({{ arquivos|length }})</h5>
+        <p>Se você tem um único arquivo PDF com todos os holerites (um por página), envie-o aqui para separá-lo em arquivos individuais.</p>
+        <form method="post" action="{{ url_for('holerites.dividir_pdf') }}" enctype="multipart/form-data">
+            <div class="input-group">
+                <input type="file" class="form-control" name="holerite_file" required accept=".pdf">
+                <button class="btn btn-secondary" type="submit">
+                    <i class="bi bi-scissors"></i> Dividir Arquivo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <strong>Passo 2: Enviar Holerites Individuais</strong>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info py-2">
+            <b>Instruções:</b>
+            <ol class="mb-0">
+                <li>Após dividir, renomeie os arquivos <code>holerite_pagina_X.pdf</code> para o nome <strong>exato</strong> do funcionário. (Ex: <code>José Carlos da Silva.pdf</code>).</li>
+                <li>Coloque os arquivos individuais já nomeados na pasta <code>uploads/holerites/</code>.</li>
+                <li>Clique no botão abaixo para iniciar o envio para os e-mails cadastrados.</li>
+            </ol>
+        </div>
+
+        <h5 class="card-title mt-4">Arquivos Pendentes de Envio ({{ arquivos|length }})</h5>
         {% if arquivos %}
             <ul class="list-group mb-3">
                 {% for arq in arquivos %}

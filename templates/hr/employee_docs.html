@@ -35,10 +35,11 @@
 <table class="table table-striped align-middle">
   <thead>
     <tr>
-      <th style="width: 160px;">Tipo</th>
+      <th style="width: 20%;">Tipo</th>
       <th>Descrição</th>
-      <th style="width: 180px;">Enviado em</th>
-      <th style="width: 120px;">Arquivo</th>
+      <th style="width: 20%;">Enviado em</th>
+      <th style="width: 10%;">Arquivo</th>
+      <th style="width: 10%;">Ações</th> {# NOVA COLUNA #}
     </tr>
   </thead>
   <tbody>
@@ -60,10 +61,17 @@
             -
           {% endif %}
         </td>
+        {# INÍCIO: NOVO BOTÃO DE EXCLUIR #}
+        <td>
+          <form method="post" action="{{ url_for('rh.employee_docs_delete', doc_id=d.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este documento?');">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+          </form>
+        </td>
+        {# FIM: NOVO BOTÃO #}
       </tr>
       {% endfor %}
     {% else %}
-      <tr><td colspan="4">Nenhum documento enviado ainda.</td></tr>
+      <tr><td colspan="5" class="text-center">Nenhum documento enviado ainda.</td></tr>
     {% endif %}
   </tbody>
 </table>
