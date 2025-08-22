@@ -31,6 +31,10 @@ def new():
     if form.validate_on_submit():
         new_customer = Customer()
         form.populate_obj(new_customer)
+        # --- MELHORIA APLICADA AQUI ---
+        # Garante que o campo vazio seja salvo como nulo
+        if not new_customer.cpf_cnpj:
+            new_customer.cpf_cnpj = None
         db.session.add(new_customer)
         db.session.commit()
         flash("Cliente cadastrado com sucesso!", "success")
@@ -44,6 +48,10 @@ def edit(customer_id):
     form = CustomerForm(obj=customer)
     if form.validate_on_submit():
         form.populate_obj(customer)
+        # --- MELHORIA APLICADA AQUI ---
+        # Garante que o campo vazio seja salvo como nulo
+        if not customer.cpf_cnpj:
+            customer.cpf_cnpj = None
         db.session.commit()
         flash("Cliente atualizado com sucesso!", "success")
         return redirect(url_for("customers.list"))

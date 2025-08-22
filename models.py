@@ -163,7 +163,8 @@ class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tipo_pessoa = db.Column(db.String(2), default='PF')
     nome_razao_social = db.Column(db.String(200), nullable=False)
-    cpf_cnpj = db.Column(db.String(20), unique=True)
+    # --- ALTERAÇÃO APLICADA AQUI ---
+    cpf_cnpj = db.Column(db.String(20), unique=False, nullable=True)
     telefone = db.Column(db.String(30))
     email = db.Column(db.String(150))
     cep = db.Column(db.String(9))
