@@ -10,7 +10,6 @@ def now_sao_paulo():
     return datetime.now(pytz.timezone('America/Sao_Paulo'))
 
 class AuditLog(db.Model):
-    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.String(120))
     action = db.Column(db.String(50))
@@ -20,7 +19,6 @@ class AuditLog(db.Model):
     created_at = db.Column(db.DateTime, default=now_sao_paulo)
 
 class User(db.Model, UserMixin):
-    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
@@ -30,7 +28,6 @@ class User(db.Model, UserMixin):
     def get_id(self): return str(self.id)
 
 class Company(db.Model):
-    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     razao_social = db.Column(db.String(200), nullable=False)
     nome_fantasia = db.Column(db.String(200), default="")
@@ -49,12 +46,10 @@ class Company(db.Model):
     is_default = db.Column(db.Boolean, default=False)
 
 class Funcao(db.Model):
-    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
 
 class Employee(db.Model):
-    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey("company.id"))
     funcao_id = db.Column(db.Integer, db.ForeignKey("funcao.id"))
@@ -102,12 +97,10 @@ class Employee(db.Model):
         return f"{anos}a {meses}m" if anos or meses else f"{dias}d"
 
 class DocumentType(db.Model):
-    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
 
 class Document(db.Model):
-    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     company_id = db.Column(db.Integer, db.ForeignKey("company.id"))
     tipo_id = db.Column(db.Integer, db.ForeignKey("document_type.id"))
@@ -130,7 +123,6 @@ class Document(db.Model):
         return "Vigente"
 
 class EmployeeDocument(db.Model):
-    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey("employee.id"), nullable=False, index=True)
     tipo = db.Column(db.String(80))
@@ -140,7 +132,6 @@ class EmployeeDocument(db.Model):
     employee = db.relationship("Employee", backref="documentos")
 
 class CashMovement(db.Model):
-    # ... (código existente)
     __tablename__ = "cash_movement"
     id = db.Column(db.Integer, primary_key=True)
     tipo = db.Column(db.String(20), nullable=False)
@@ -159,11 +150,9 @@ class CashMovement(db.Model):
     pagamentos_quitados = db.relationship('CashMovement', backref=db.backref('pagamento_de', remote_side=[id]))
 
 class Customer(db.Model):
-    # ... (código existente)
     id = db.Column(db.Integer, primary_key=True)
     tipo_pessoa = db.Column(db.String(2), default='PF')
     nome_razao_social = db.Column(db.String(200), nullable=False)
-    # --- ALTERAÇÃO APLICADA AQUI ---
     cpf_cnpj = db.Column(db.String(20), unique=False, nullable=True)
     telefone = db.Column(db.String(30))
     email = db.Column(db.String(150))
@@ -178,7 +167,6 @@ class Customer(db.Model):
     movimentos = db.relationship('CashMovement', backref='customer', lazy=True, foreign_keys=[CashMovement.customer_id])
 
 class Fornecedor(db.Model):
-    # ... (código existente)
     __tablename__ = 'fornecedor'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(200), nullable=False)
@@ -186,7 +174,6 @@ class Fornecedor(db.Model):
     epis = db.relationship('EPI', backref='fornecedor', lazy=True)
 
 class EPI(db.Model):
-    # ... (código existente)
     __tablename__ = 'epi'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(200), nullable=False)
@@ -195,7 +182,6 @@ class EPI(db.Model):
     estoque = db.Column(db.Integer, default=0)
 
 class MovimentacaoEPI(db.Model):
-    # ... (código existente)
     __tablename__ = 'movimentacao_epi'
     id = db.Column(db.Integer, primary_key=True)
     epi_id = db.Column(db.Integer, db.ForeignKey('epi.id'), nullable=False)
@@ -208,25 +194,34 @@ class MovimentacaoEPI(db.Model):
     employee = db.relationship('Employee')
 
 class Servico(db.Model):
-    # ... (código existente)
     __tablename__ = 'servico'
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(150), nullable=False, unique=True)
 
-# --- MODELO DE AGENDAMENTO ATUALIZADO ---
 class Agendamento(db.Model):
     __tablename__ = 'agendamento'
     id = db.Column(db.Integer, primary_key=True)
-    # Agora o cliente é opcional
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
     servico_id = db.Column(db.Integer, db.ForeignKey('servico.id'), nullable=False)
     data_hora = db.Column(db.DateTime, nullable=False)
     local = db.Column(db.String(300))
     observacao = db.Column(db.Text)
     status = db.Column(db.String(50), default='Agendado')
-    
-    # Novo campo para o nome do visitante
     visitante_nome = db.Column(db.String(200), nullable=True)
-    
     customer = db.relationship('Customer', backref='agendamentos')
     servico = db.relationship('Servico', backref='agendamentos')
+
+# --- MÓDULO DE ORÇAMENTOS ---
+class Proposal(db.Model):
+    __tablename__ = 'proposal'
+    id = db.Column(db.Integer, primary_key=True)
+    issuing_company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    representative_name = db.Column(db.String(200))
+    description = db.Column(db.Text, nullable=False)
+    value = db.Column(db.Numeric(10, 2), nullable=False)
+    billing_unit = db.Column(db.String(50))
+    status = db.Column(db.String(20), default='Pendente', nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    issuing_company = db.relationship('Company', backref='proposals')
+    customer = db.relationship('Customer', backref='proposals')

@@ -2,8 +2,7 @@
 
 from flask import Blueprint, render_template
 from flask_login import login_required
-# Importa o modelo de Agendamento
-from models import Document, Employee, Agendamento
+from models import Document, Employee, Agendamento, Proposal
 from datetime import date, timedelta, datetime
 
 dash_bp = Blueprint("dash", __name__, template_folder='../../templates')
@@ -30,12 +29,12 @@ def dashboard():
     tox_avencer_list = Employee.query.filter(Employee.exame_toxico_validade >= hoje, Employee.exame_toxico_validade <= em_30, Employee.ativo==True).order_by(Employee.exame_toxico_validade.asc()).all()
 
     # --- INÍCIO: NOVAS QUERIES PARA AGENDAMENTOS ---
-    # Apenas agendamentos com status 'Agendado' que já passaram da data/hora
     agendamentos_atrasados_list = Agendamento.query.filter(Agendamento.data_hora < agora, Agendamento.status == 'Agendado').order_by(Agendamento.data_hora.asc()).all()
-    # Próximos 7 dias, com status 'Agendado'
     em_7_dias = agora + timedelta(days=7)
     agendamentos_proximos_list = Agendamento.query.filter(Agendamento.data_hora >= agora, Agendamento.data_hora <= em_7_dias, Agendamento.status == 'Agendado').order_by(Agendamento.data_hora.asc()).all()
-    # --- FIM: NOVAS QUERIES ---
+    
+    # Adicionado para Orçamentos
+    pending_proposals = Proposal.query.filter_by(status='Pendente').count()
 
     # Contagem geral
     total_func = Employee.query.count()
@@ -52,8 +51,8 @@ def dashboard():
         cnh_avencer_list=cnh_avencer_list,
         tox_venc_list=tox_venc_list,
         tox_avencer_list=tox_avencer_list,
-        agendamentos_atrasados_list=agendamentos_atrasados_list, # Adicionado
-        agendamentos_proximos_list=agendamentos_proximos_list,   # Adicionado
+        agendamentos_atrasados_list=agendamentos_atrasados_list,
+        agendamentos_proximos_list=agendamentos_proximos_list,
         # Contagens para os cards
         docs_venc=len(docs_venc_list),
         docs_avencer=len(docs_avencer_list),
@@ -63,8 +62,9 @@ def dashboard():
         cnh_avencer=len(cnh_avencer_list),
         tox_venc=len(tox_venc_list),
         tox_avencer=len(tox_avencer_list),
-        agendamentos_atrasados=len(agendamentos_atrasados_list), # Adicionado
-        agendamentos_proximos=len(agendamentos_proximos_list),   # Adicionado
+        agendamentos_atrasados=len(agendamentos_atrasados_list),
+        agendamentos_proximos=len(agendamentos_proximos_list),
+        pending_proposals=pending_proposals, # Adicionado
         total_func=total_func,
         ativos=ativos,
         inativos=inativos

@@ -7,7 +7,6 @@ from models import User, Company, Funcao, DocumentType
 from dotenv import load_dotenv
 
 def normalize_upload_path(path):
-    # ... (código existente) ...
     if not path: return ""
     rel_path = str(path).replace('\\', '/')
     if rel_path.startswith('uploads/'): rel_path = rel_path[len('uploads/'):]
@@ -41,7 +40,8 @@ def create_app():
     from blueprints.customers.routes import customers_bp
     from blueprints.epi import epi_bp
     from blueprints.agendamentos import agendamentos_bp
-    from blueprints.holerites import holerites_bp # MÓDULO NOVO
+    from blueprints.holerites import holerites_bp
+    from blueprints.proposals import proposals_bp # <-- Adicionado
     
     # Registro dos blueprints
     app.register_blueprint(main_bp)
@@ -57,13 +57,13 @@ def create_app():
     app.register_blueprint(customers_bp, url_prefix='/clientes')
     app.register_blueprint(epi_bp, url_prefix='/epi')
     app.register_blueprint(agendamentos_bp, url_prefix='/agendamentos')
-    app.register_blueprint(holerites_bp, url_prefix='/holerites') # MÓDULO NOVO
+    app.register_blueprint(holerites_bp, url_prefix='/holerites')
+    app.register_blueprint(proposals_bp, url_prefix='/orcamentos') # <-- Adicionado
     
     print("Home ('/') apontada para dash.dashboard.")
     
     return app
 
-# ... (resto do app.py continua igual) ...
 @login_manager.user_loader
 def load_user(uid):
     return User.query.get(int(uid))
@@ -86,7 +86,6 @@ def init_data():
         db.session.add(Company(razao_social="Empresa Exemplo LTDA", nome_fantasia="Exemplo", cnpj="00.000.000/0001-00", cidade="São José do Rio Pardo", uf="SP"))
     db.session.commit()
     print("Dados iniciais criados. Login: admin / admin123")
-
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)

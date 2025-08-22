@@ -118,11 +118,19 @@
         </div>
     </div>
     <div class="col-md-3">
+        <div class="card border-info h-100" role="button" onclick="window.location.href='{{ url_for('proposals.list', status='Pendente') }}'">
+            <div class="card-body">
+                <div class="text-muted">Orçamentos Pendentes</div>
+                <div class="display-6">{{ pending_proposals }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
         <div class="card border-secondary h-100">
             <div class="card-body"><div class="text-muted">Total de Funcionários</div><div class="display-6">{{ total_func }}</div></div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 mt-3">
         <div class="card border-secondary h-100">
             <div class="card-body"><div class="text-muted">Ativos / Inativos</div><div class="display-6">{{ ativos }} / {{ inativos }}</div></div>
         </div>

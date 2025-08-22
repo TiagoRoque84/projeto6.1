@@ -5,7 +5,6 @@ from wtforms import StringField, PasswordField, SubmitField, BooleanField, Selec
 from wtforms.fields import DateTimeField
 from wtforms.validators import DataRequired, Optional, Email, NumberRange
 
-# ... (todos os outros forms continuam iguais) ...
 class LoginForm(FlaskForm):
     username = StringField("Usuário", validators=[DataRequired()])
     password = PasswordField("Senha", validators=[DataRequired()])
@@ -151,15 +150,10 @@ class ServicoForm(FlaskForm):
     nome = StringField('Nome do Serviço', validators=[DataRequired(message="O nome do serviço é obrigatório.")])
     submit = SubmitField('Salvar')
 
-# --- FORMULÁRIO DE AGENDAMENTO ATUALIZADO ---
 class AgendamentoForm(FlaskForm):
-    # Cliente agora é opcional
     customer_id = SelectField('Cliente', coerce=int, validators=[Optional()])
     servico_id = SelectField('Serviço', coerce=int, validators=[DataRequired(message="É preciso selecionar um serviço.")])
-    
-    # Novo campo para visitante
     visitante_nome = StringField('Nome do Visitante')
-    
     data_hora = DateTimeField('Data e Hora', format='%Y-%m-%dT%H:%M', validators=[DataRequired(message="A data e hora são obrigatórias.")])
     local = StringField('Local da Coleta/Serviço', validators=[DataRequired(message="O local é obrigatório.")])
     observacao = TextAreaField('Observações')
@@ -179,3 +173,24 @@ class MovementForm(FlaskForm):
     descricao = StringField("Descrição/Motivo", validators=[DataRequired()])
     submit = SubmitField("Lançar e imprimir")
     submit_no_print = SubmitField("Apenas lançar")
+
+# --- MÓDULO DE ORÇAMENTOS ---
+class ProposalForm(FlaskForm):
+    issuing_company_id = SelectField('Empresa Emitente', coerce=int, validators=[DataRequired("Selecione a empresa que está emitindo o orçamento.")])
+    customer_id = SelectField('Cliente', coerce=int, validators=[DataRequired("Selecione o cliente.")])
+    representative_name = StringField('Representante Comercial', validators=[DataRequired("O nome do representante é obrigatório.")])
+    description = TextAreaField('Descrição dos Serviços', validators=[DataRequired("A descrição é obrigatória.")])
+    value = DecimalField('Valor (R$)', places=2, validators=[DataRequired("O valor é obrigatório.")])
+    billing_unit = SelectField('Forma de Cobrança', choices=[
+        ('Por Viagem', 'Por Viagem/Frete'),
+        ('Por Tonelada', 'Por Tonelada'),
+        ('Por Hora', 'Por Hora'),
+        ('Verba Mensal', 'Verba Mensal'),
+        ('Preço Fixo', 'Preço Fixo'),
+    ], validators=[DataRequired()])
+    status = SelectField('Status', choices=[
+        ('Pendente', 'Pendente'),
+        ('Aceito', 'Aceito'),
+        ('Recusado', 'Recusado')
+    ], default='Pendente')
+    submit = SubmitField('Salvar Orçamento')
