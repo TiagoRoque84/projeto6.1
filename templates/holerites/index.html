@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0">Distribuição de Holerites</h3>
+</div>
+
+<div class="alert alert-info">
+    <b>Como funciona:</b>
+    <ol class="mb-0">
+        <li>Coloque os arquivos PDF dos holerites na pasta <code>uploads/holerites/</code>.</li>
+        <li>O nome de cada arquivo deve ser <strong>exatamente</strong> o nome completo do funcionário (Ex: <code>José Carlos da Silva.pdf</code>).</li>
+        <li>Clique no botão abaixo para iniciar o envio. Os arquivos enviados com sucesso serão movidos para a pasta <code>uploads/holerites/enviados/</code>.</li>
+    </ol>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Arquivos Pendentes de Envio ({{ arquivos|length }})</h5>
+        {% if arquivos %}
+            <ul class="list-group mb-3">
+                {% for arq in arquivos %}
+                    <li class="list-group-item">{{ arq }}</li>
+                {% endfor %}
+            </ul>
+            <form method="post" action="{{ url_for('holerites.distribuir') }}" onsubmit="return confirm('Tem certeza que deseja enviar {{ arquivos|length }} holerite(s) por e-mail?');">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-send"></i> Enviar Holerites
+                </button>
+            </form>
+        {% else %}
+            <p class="card-text">Nenhum arquivo PDF encontrado na pasta <code>uploads/holerites/</code>.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

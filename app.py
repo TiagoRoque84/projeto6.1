@@ -7,18 +7,13 @@ from models import User, Company, Funcao, DocumentType
 from dotenv import load_dotenv
 
 def normalize_upload_path(path):
-    """Filtro para normalizar caminhos de upload para URLs."""
-    if not path:
-        return ""
+    # ... (código existente) ...
+    if not path: return ""
     rel_path = str(path).replace('\\', '/')
-    if rel_path.startswith('uploads/'):
-        rel_path = rel_path[len('uploads/'):]
+    if rel_path.startswith('uploads/'): rel_path = rel_path[len('uploads/'):]
     return rel_path
 
 def create_app():
-    """
-    Função factory para criar e configurar a instância da aplicação Flask.
-    """
     app = Flask(__name__, template_folder="templates")
     
     app.jinja_env.filters['norm_upload'] = normalize_upload_path
@@ -45,7 +40,8 @@ def create_app():
     from blueprints.dash.routes import dash_bp
     from blueprints.customers.routes import customers_bp
     from blueprints.epi import epi_bp
-    from blueprints.agendamentos import agendamentos_bp # MÓDULO NOVO
+    from blueprints.agendamentos import agendamentos_bp
+    from blueprints.holerites import holerites_bp # MÓDULO NOVO
     
     # Registro dos blueprints
     app.register_blueprint(main_bp)
@@ -60,12 +56,14 @@ def create_app():
     app.register_blueprint(dash_bp, url_prefix='/dash')
     app.register_blueprint(customers_bp, url_prefix='/clientes')
     app.register_blueprint(epi_bp, url_prefix='/epi')
-    app.register_blueprint(agendamentos_bp, url_prefix='/agendamentos') # MÓDULO NOVO
+    app.register_blueprint(agendamentos_bp, url_prefix='/agendamentos')
+    app.register_blueprint(holerites_bp, url_prefix='/holerites') # MÓDULO NOVO
     
     print("Home ('/') apontada para dash.dashboard.")
     
     return app
 
+# ... (resto do app.py continua igual) ...
 @login_manager.user_loader
 def load_user(uid):
     return User.query.get(int(uid))
@@ -74,7 +72,6 @@ app = create_app()
 
 @app.cli.command("init-data")
 def init_data():
-    """Cria os dados iniciais no banco de dados."""
     if not User.query.filter_by(username="admin").first():
         from werkzeug.security import generate_password_hash
         u = User(username="admin", password=generate_password_hash("admin123", method='pbkdf2:sha256'), role="admin", nome_completo="Administrador")
