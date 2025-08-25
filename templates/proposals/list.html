@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0">Orçamentos</h3>
+  <a class="btn btn-success" href="{{ url_for('proposals.new') }}">Novo Orçamento</a>
+</div>
+
+<div class="d-flex gap-2 mb-3">
+  <a href="{{ url_for('proposals.list') }}" class="btn btn-sm {{ 'btn-dark' if not current_status else 'btn-outline-dark' }}">Todos</a>
+  <a href="{{ url_for('proposals.list', status='Pendente') }}" class="btn btn-sm {{ 'btn-primary' if current_status == 'Pendente' else 'btn-outline-primary' }}">Pendentes</a>
+  <a href="{{ url_for('proposals.list', status='Aceito') }}" class="btn btn-sm {{ 'btn-success' if current_status == 'Aceito' else 'btn-outline-success' }}">Aceitos</a>
+  <a href="{{ url_for('proposals.list', status='Recusado') }}" class="btn btn-sm {{ 'btn-danger' if current_status == 'Recusado' else 'btn-outline-danger' }}">Recusados</a>
+</div>
+
+<table class="table table-striped table-hover">
+  <thead>
+    <tr>
+      <th>#ID</th>
+      <th>Cliente</th>
+      <th>Data</th>
+      <th class="text-end">Valor Total (R$)</th>
+      <th class="text-center">Status</th>
+      <th style="width: 200px;"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.id }}</td>
+      <td>{{ item.customer.nome_razao_social }}</td>
+      <td>{{ item.created_at.strftime('%d/%m/%Y') }}</td>
+      <td class="text-end">{{ "%.2f"|format(item.total_value|float) }}</td>
+      <td class="text-center">
+        {% if item.status == 'Pendente' %}<span class="badge bg-primary">{{ item.status }}</span>
+        {% elif item.status == 'Aceito' %}<span class="badge bg-success">{{ item.status }}</span>
+        {% elif item.status == 'Recusado' %}<span class="badge bg-danger">{{ item.status }}</span>
+        {% endif %}
+      </td>
+      <td class="text-end">
+        <div class="d-flex gap-2 justify-content-end">
+          <a href="{{ url_for('proposals.pdf', proposal_id=item.id) }}" class="btn btn-sm btn-info" target="_blank">PDF</a>
+          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('proposals.edit', proposal_id=item.id) }}">Editar</a>
+          <form method="post" action="{{ url_for('proposals.delete', proposal_id=item.id) }}" onsubmit="return confirm('Tem certeza?');">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="6" class="text-center">Nenhum orçamento encontrado.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

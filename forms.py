@@ -1,7 +1,8 @@
 # forms.py
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField, IntegerField, TextAreaField, DecimalField, FloatField
+# --- CORREÇÃO AQUI ---
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField, IntegerField, TextAreaField, DecimalField, FloatField, FieldList, FormField
 from wtforms.fields import DateTimeField
 from wtforms.validators import DataRequired, Optional, Email, NumberRange
 
@@ -175,19 +176,20 @@ class MovementForm(FlaskForm):
     submit_no_print = SubmitField("Apenas lançar")
 
 # --- MÓDULO DE ORÇAMENTOS ---
+class ProposalItemForm(FlaskForm):
+    """Sub-formulário para um item do orçamento."""
+    class Meta:
+        csrf = False
+    description = StringField('Descrição do Serviço', validators=[DataRequired()])
+    unit = StringField('Unidade (Ex: Viagem, Tonelada)')
+    value = DecimalField('Valor (R$)', places=2, validators=[DataRequired()])
+
 class ProposalForm(FlaskForm):
-    issuing_company_id = SelectField('Empresa Emitente', coerce=int, validators=[DataRequired("Selecione a empresa que está emitindo o orçamento.")])
+    issuing_company_id = SelectField('Empresa Emitente', coerce=int, validators=[DataRequired("Selecione a empresa.")])
     customer_id = SelectField('Cliente', coerce=int, validators=[DataRequired("Selecione o cliente.")])
-    representative_name = StringField('Representante Comercial', validators=[DataRequired("O nome do representante é obrigatório.")])
-    description = TextAreaField('Descrição dos Serviços', validators=[DataRequired("A descrição é obrigatória.")])
-    value = DecimalField('Valor (R$)', places=2, validators=[DataRequired("O valor é obrigatório.")])
-    billing_unit = SelectField('Forma de Cobrança', choices=[
-        ('Por Viagem', 'Por Viagem/Frete'),
-        ('Por Tonelada', 'Por Tonelada'),
-        ('Por Hora', 'Por Hora'),
-        ('Verba Mensal', 'Verba Mensal'),
-        ('Preço Fixo', 'Preço Fixo'),
-    ], validators=[DataRequired()])
+    attention = StringField('A/C (Aos cuidados de)')
+    representative_name = StringField('Representante Comercial', validators=[DataRequired()])
+    items = FieldList(FormField(ProposalItemForm), min_entries=1)
     status = SelectField('Status', choices=[
         ('Pendente', 'Pendente'),
         ('Aceito', 'Aceito'),

@@ -211,17 +211,33 @@ class Agendamento(db.Model):
     customer = db.relationship('Customer', backref='agendamentos')
     servico = db.relationship('Servico', backref='agendamentos')
 
-# --- MÓDULO DE ORÇAMENTOS ---
+# --- MÓDULO DE ORÇAMENTOS (ESTRUTURA CORRETA) ---
 class Proposal(db.Model):
     __tablename__ = 'proposal'
     id = db.Column(db.Integer, primary_key=True)
     issuing_company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    attention = db.Column(db.String(200))
     representative_name = db.Column(db.String(200))
-    description = db.Column(db.Text, nullable=False)
-    value = db.Column(db.Numeric(10, 2), nullable=False)
-    billing_unit = db.Column(db.String(50))
     status = db.Column(db.String(20), default='Pendente', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
     issuing_company = db.relationship('Company', backref='proposals')
     customer = db.relationship('Customer', backref='proposals')
+    items = db.relationship('ProposalItem', backref='proposal', cascade="all, delete-orphan")
+
+@property
+def total_value(self):
+        return sum(item.total for item in self.items)
+
+class ProposalItem(db.Model):
+    __tablename__ = 'proposal_item'
+    id = db.Column(db.Integer, primary_key=True)
+    proposal_id = db.Column(db.Integer, db.ForeignKey('proposal.id'), nullable=False)
+    description = db.Column(db.String(500), nullable=False)
+    unit = db.Column(db.String(50))
+    value = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    
+    @property
+    def total(self):
+        return self.value

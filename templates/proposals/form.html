@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ title }}</h3>
+<hr>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      {{ form.issuing_company_id.label(class="form-label") }}
+      {{ form.issuing_company_id(class="form-select") }}
+    </div>
+    <div class="col-md-6 mb-3">
+      {{ form.customer_id.label(class="form-label") }}
+      {{ form.customer_id(class="form-select") }}
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-3">
+        {{ form.attention.label(class="form-label") }}
+        {{ form.attention(class="form-control", placeholder="Ex: A/C Sr. Douglas") }}
+    </div>
+    <div class="col-md-6 mb-3">
+      {{ form.representative_name.label(class="form-label") }}
+      {{ form.representative_name(class="form-control", placeholder="Nome de quem assina o orçamento") }}
+    </div>
+  </div>
+  
+  <hr>
+
+  <h5>Itens do Orçamento</h5>
+  <div id="items-container">
+    {% for item_form in form.items %}
+    <div class="row item-row mb-2 border rounded p-2">
+      <div class="col-md-6">
+        {{ item_form.description.label(class="form-label") }}
+        {{ item_form.description(class="form-control") }}
+      </div>
+      <div class="col-md-3">
+        {{ item_form.unit.label(class="form-label") }}
+        {{ item_form.unit(class="form-control") }}
+      </div>
+      <div class="col-md-2">
+        {{ item_form.value.label(class="form-label") }}
+        {{ item_form.value(class="form-control") }}
+      </div>
+      <div class="col-md-1 d-flex align-items-end">
+        <button type="button" class="btn btn-danger remove-item">X</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <button type="button" id="add-item" class="btn btn-secondary mt-2">Adicionar Item</button>
+  
+  <hr>
+
+  <div class="row">
+    <div class="col-md-4 mb-3">
+        {{ form.status.label(class="form-label") }}
+        {{ form.status(class="form-select") }}
+    </div>
+  </div>
+  
+  {{ form.submit(class="btn btn-primary") }}
+  <a href="{{ url_for('proposals.list') }}" class="btn btn-outline-secondary">Cancelar</a>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('items-container');
+    const addButton = document.getElementById('add-item');
+    let index = container.getElementsByClassName('item-row').length;
+
+    function updateRemoveButtons() {
+        const removeButtons = container.getElementsByClassName('remove-item');
+        for (let btn of removeButtons) {
+            btn.onclick = function() {
+                // Não permite remover o último item
+                if (container.getElementsByClassName('item-row').length > 1) {
+                    this.closest('.item-row').remove();
+                } else {
+                    alert('O orçamento deve ter pelo menos um item.');
+                }
+            }
+        }
+    }
+
+    addButton.addEventListener('click', function() {
+        const template = `
+        <div class="row item-row mb-2 border rounded p-2">
+          <div class="col-md-6">
+            <label class="form-label" for="items-${index}-description">Descrição do Serviço</label>
+            <input class="form-control" id="items-${index}-description" name="items-${index}-description" type="text" value="">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="items-${index}-unit">Unidade (Ex: Viagem, Tonelada)</label>
+            <input class="form-control" id="items-${index}-unit" name="items-${index}-unit" type="text" value="">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label" for="items-${index}-value">Valor (R$)</label>
+            <input class="form-control" id="items-${index}-value" name="items-${index}-value" type="text" value="">
+          </div>
+          <div class="col-md-1 d-flex align-items-end">
+            <button type="button" class="btn btn-danger remove-item">X</button>
+          </div>
+        </div>
+        `;
+        container.insertAdjacentHTML('beforeend', template);
+        index++;
+        updateRemoveButtons();
+    });
+
+    updateRemoveButtons();
+});
+</script>
+{% endblock %}

@@ -15,14 +15,12 @@ H1 = ParagraphStyle('H1', parent=styles['Heading1'], fontSize=16, spaceAfter=8)
 H2 = ParagraphStyle('H2', parent=styles['Heading2'], fontSize=12, spaceAfter=6)
 N = styles['Normal']
 BodyRight = ParagraphStyle('BodyRight', parent=styles['Normal'], alignment=2) # 2 = RIGHT
-
-# Adiciona um estilo para parágrafos centralizados
 Centered = ParagraphStyle('Centered', parent=styles['Normal'], alignment=1) # 1 = CENTER
 
-def _s(v): 
+def _s(v):
     return "" if v is None else str(v)
 
-def P(v, style=N): 
+def P(v, style=N):
     return Paragraph(_s(v), style)
 
 def format_date(d):
@@ -47,7 +45,7 @@ def employee_pdf(buffer, app, e):
         leftMargin=2*cm, rightMargin=2*cm, topMargin=1.5*cm, bottomMargin=1.5*cm
     )
     elems=[]
-    title = Paragraph(f"Ficha do Colaborador - #{e.id}", H1)
+    title = Paragraph(f"Ficha do Colaborador - {e.nome}", H1)
 
     photo_flow = None
     if getattr(e, 'foto_path', None):
@@ -155,7 +153,7 @@ def toxicos_pdf(buffer, app, items, titulo="Exame Toxicológico"):
     elems.extend([table,Spacer(1,0.4*cm),Paragraph(f"Gerado em {format_date(_date.today())}",N)])
     doc.build(elems)
 
-# --- FUNÇÃO ATUALIZADA: COMPROVANTE DE RETIRADA DE EPI ---
+# -------------------- COMPROVANTE DE RETIRADA DE EPI --------------------
 def epi_saida_pdf(buffer, app, mov):
     doc=SimpleDocTemplate(buffer,pagesize=A4,leftMargin=2*cm,rightMargin=2*cm,topMargin=1.5*cm,bottomMargin=1.5*cm)
     elems=[]
@@ -170,8 +168,7 @@ def epi_saida_pdf(buffer, app, mov):
     termo_texto="Declaro para os devidos fins que recebi da empresa o(s) equipamento(s) de proteção individual (EPI) descrito(s) acima, em perfeitas condições de uso. Comprometo-me a utilizá-lo(s) durante toda a jornada de trabalho, a zelar pela sua guarda e conservação, e a devolvê-lo(s) quando solicitado. Estou ciente de que o extravio ou dano por uso indevido poderá ser descontado de meu salário, conforme previsto no Art. 462 da CLT."
     elems.append(Paragraph(termo_texto,N))
     elems.append(Spacer(1, 2.5*cm))
-    
-    # Bloco de assinatura corrigido para melhor alinhamento
+
     assinatura_data=[
         [P("________________________________________", Centered)],
         [P(f"<b>{_s(mov.retirado_por)}</b>", Centered)],
@@ -239,7 +236,7 @@ def pdv_summary_pdf(buffer, app, movements, start_date, end_date):
 def epi_summary_pdf(buffer, app, movements, start_date, end_date):
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=1.5*cm, rightMargin=1.5*cm, topMargin=1.5*cm, bottomMargin=1.5*cm)
     elems = []
-    
+
     if start_date == end_date:
         periodo_str = f"Data: {start_date.strftime('%d/%m/%Y')}"
     else:
@@ -250,17 +247,17 @@ def epi_summary_pdf(buffer, app, movements, start_date, end_date):
     elems.append(Spacer(1, 0.8*cm))
 
     table_data = [[P('<b>Data/Hora</b>'), P('<b>EPI</b>'), P('<b>Tipo</b>'), P('<b>Qtd</b>'), P('<b>Recebido por</b>')]]
-    
+
     for mov in movements:
         table_data.append([
-            mov.data_movimentacao.strftime('%d/%m/%Y %H:%M'),
-            mov.epi.nome,
-            mov.tipo,
-            str(mov.quantidade),
-            mov.retirado_por
+            P(mov.data_movimentacao.strftime('%d/%m/%Y %H:%M')),
+            P(mov.epi.nome),
+            P(mov.tipo),
+            P(str(mov.quantidade)),
+            P(mov.retirado_por)
         ])
 
-    table = Table(table_data, colWidths=[4*cm, 6*cm, 2*cm, 1.5*cm, 4.5*cm])
+    table = Table(table_data, colWidths=[3.5*cm, 6.5*cm, 2*cm, 1.5*cm, 4.5*cm])
     table.setStyle(TableStyle([
         ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
         ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
@@ -270,4 +267,58 @@ def epi_summary_pdf(buffer, app, movements, start_date, end_date):
         ('ALIGN', (3,1), (3,-1), 'CENTER'),
     ]))
     elems.append(table)
+    doc.build(elems)
+
+# -------------------- ORÇAMENTO (A4) --------------------
+def proposal_pdf(buffer, app, proposal):
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=2*cm, rightMargin=2*cm, topMargin=1.5*cm, bottomMargin=1.5*cm)
+    elems = []
+    
+    company = proposal.issuing_company
+    header_data = [
+        [P(f"<b>{company.nome_fantasia or company.razao_social}</b>"), P(f"<b>Orçamento Nº:</b> {proposal.id}", BodyRight)],
+        [P(f"{company.logradouro}, {company.numero} - {company.bairro}"), P(f"<b>Data:</b> {proposal.created_at.strftime('%d/%m/%Y')}", BodyRight)],
+        [P(f"{company.cidade} - {company.uf} | CEP: {company.cep}"), ''],
+        [P(f"CNPJ: {company.cnpj}"), ''],
+    ]
+    header_table = Table(header_data, colWidths=[10*cm, 7*cm])
+    header_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP')]))
+    elems.append(header_table)
+    elems.append(Spacer(1, 1*cm))
+
+    customer = proposal.customer
+    elems.append(P("<b>CLIENTE:</b>"))
+    customer_data = [
+        ['Nome/Razão Social:', P(customer.nome_razao_social)],
+        ['CPF/CNPJ:', P(customer.cpf_cnpj)],
+        ['Endereço:', P(f"{customer.logradouro or ''}, {customer.numero or ''} - {customer.bairro or ''}, {customer.cidade or ''} - {customer.uf or ''}")],
+        ['Contato:', P(f"{customer.telefone or ''} | {customer.email or ''}")],
+    ]
+    customer_table = Table(customer_data, colWidths=[4*cm, 13*cm])
+    customer_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 0.25, colors.grey), ('VALIGN', (0,0), (-1,-1), 'TOP')]))
+    elems.append(customer_table)
+    elems.append(Spacer(1, 1*cm))
+
+    body_data = [
+        [P('<b>Descrição dos Serviços</b>')],
+        [P(proposal.description.replace('\n', '<br/>'))],
+        [Spacer(1, 0.5*cm)],
+        [P('<b>Valor e Condições</b>')],
+        [P(f"<b>Valor:</b> R$ {proposal.value} ({proposal.billing_unit})")],
+        [Spacer(1, 0.5*cm)],
+        [P(f"<i>Proposta válida por 15 dias.</i>")],
+    ]
+    body_table = Table(body_data, colWidths=[17*cm])
+    body_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 0.25, colors.grey), ('TOPPADDING', (0,0), (-1,-1), 6), ('BOTTOMPADDING', (0,0), (-1,-1), 6)]))
+    elems.append(body_table)
+    elems.append(Spacer(1, 2.5*cm))
+
+    signature_data = [
+        [P("____________________________", Centered), P("____________________________", Centered)],
+        [P(f"{proposal.representative_name}", Centered), P(f"{customer.nome_razao_social}", Centered)],
+        [P("Representante", Centered), P("Cliente", Centered)],
+    ]
+    signature_table = Table(signature_data, colWidths=[8.5*cm, 8.5*cm])
+    elems.append(signature_table)
+
     doc.build(elems)
