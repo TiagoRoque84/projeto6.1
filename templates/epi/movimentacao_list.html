@@ -23,55 +23,77 @@
         </form>
     </div>
 </div>
+
+<h4>Últimas Saídas Registradas</h4>
+<table class="table table-sm table-striped table-hover mb-5">
+  <thead>
+    <tr>
+      <th style="width: 15%;">Data</th>
+      <th>Retirado por</th>
+      <th>Itens Retirados</th>
+      <th style="width: 150px;">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for saida in saidas %}
+    <tr>
+      <td>{{ saida.data_saida.strftime('%d/%m/%Y %H:%M') }}</td>
+      <td>
+        {% if saida.employee_id %}
+          <a href="{{ url_for('rh.employees_edit', emp_id=saida.employee_id) }}" target="_blank" title="Ver ficha do funcionário">
+            {{ saida.retirado_por }}
+          </a>
+        {% else %}
+          {{ saida.retirado_por }}
+        {% endif %}
+      </td>
+      <td>
+        <ul class="list-unstyled mb-0">
+          {% for item in saida.items %}
+          <li>- {{ item.quantidade }}x {{ item.epi.nome }}</li>
+          {% endfor %}
+        </ul>
+      </td>
+      <td class="text-end">
+        <a href="{{ url_for('epi.reimprimir_retirada', saida_id=saida.id) }}" class="btn btn-sm btn-outline-info" target="_blank">
+          Reimprimir Ficha
+        </a>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4" class="text-center">Nenhuma saída registrada.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<h4>Últimas Entradas no Estoque</h4>
 <table class="table table-sm table-striped">
   <thead>
     <tr>
       <th style="width: 15%;">Data</th>
       <th>Equipamento (EPI)</th>
-      <th class="text-center">Tipo</th>
       <th class="text-center">Qtd</th>
-      <th>Recebido por / Observação</th>
-      <th style="width: 150px;">Ações</th>
+      <th>Observação</th>
     </tr>
   </thead>
   <tbody>
-    {% for item in items %}
+    {% for item in items if item.tipo == 'ENTRADA' %}
     <tr>
       <td>{{ item.data_movimentacao.strftime('%d/%m/%Y %H:%M') }}</td>
       <td>{{ item.epi.nome }}</td>
-      <td class="text-center">
-        {% if item.tipo == 'ENTRADA' %}
-          <span class="badge bg-success">ENTRADA</span>
-        {% else %}
-          <span class="badge bg-danger">SAÍDA</span>
-        {% endif %}
-      </td>
       <td class="text-center">{{ item.quantidade }}</td>
-      <td>
-        {# Se tiver um funcionário vinculado, cria um link para a ficha dele #}
-        {% if item.employee_id %}
-          <a href="{{ url_for('rh.employees_edit', emp_id=item.employee_id) }}" target="_blank" title="Ver ficha do funcionário">
-            {{ item.retirado_por }}
-          </a>
-        {% else %}
-          {{ item.retirado_por }}
-        {% endif %}
-      </td>
-      <td class="text-end">
-        {# O botão de reimprimir só aparece para movimentações de SAÍDA #}
-        {% if item.tipo == 'SAIDA' %}
-          <a href="{{ url_for('epi.reimprimir_retirada', mov_id=item.id) }}" class="btn btn-sm btn-outline-info" target="_blank">
-            Reimprimir Ficha
-          </a>
-        {% endif %}
-      </td>
+      <td><span class="badge bg-success">ENTRADA</span></td>
     </tr>
     {% else %}
     <tr>
-      <td colspan="6" class="text-center">Nenhuma movimentação registrada.</td>
+      <td colspan="4" class="text-center">Nenhuma entrada registrada.</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
+
 <a href="{{ url_for('epi.index') }}" class="btn btn-outline-secondary mt-3">Voltar</a>
 {% endblock %}

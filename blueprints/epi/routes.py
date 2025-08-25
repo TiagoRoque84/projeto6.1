@@ -4,14 +4,12 @@ import os
 from flask import render_template, request, redirect, url_for, flash, send_file, current_app
 from flask_login import login_required
 from . import epi_bp
-# Adiciona o EmployeeDocument para salvar o arquivo do colaborador
-from models import db, Fornecedor, EPI, MovimentacaoEPI, Employee, EmployeeDocument
+from models import db, Fornecedor, EPI, MovimentacaoEPI, Employee, EmployeeDocument, EPISaida
 from forms import FornecedorForm, EPIForm, EPIEntradaForm, EPISaidaForm
 from pdf_reports import epi_saida_pdf, epi_summary_pdf 
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
 
-# ... (rotas de index, fornecedores e cadastro de EPIs continuam iguais) ...
 @epi_bp.route('/')
 @login_required
 def index():
@@ -101,7 +99,8 @@ def epi_delete(epi_id):
 @login_required
 def movimentacao_list():
     movimentacoes = MovimentacaoEPI.query.order_by(MovimentacaoEPI.data_movimentacao.desc()).all()
-    return render_template('epi/movimentacao_list.html', items=movimentacoes)
+    saidas = EPISaida.query.order_by(EPISaida.data_saida.desc()).all()
+    return render_template('epi/movimentacao_list.html', items=movimentacoes, saidas=saidas)
 
 @epi_bp.route('/entrada', methods=['GET', 'POST'])
 @login_required
@@ -119,97 +118,93 @@ def entrada_new():
         return redirect(url_for('epi.movimentacao_list'))
     return render_template('epi/entrada_form.html', form=form, title='Registrar Entrada de EPI')
 
-# --- FUNÇÃO DE SAÍDA DE EPI ATUALIZADA ---
 @epi_bp.route('/saida', methods=['GET', 'POST'])
 @login_required
 def saida_new():
     form = EPISaidaForm()
-    form.epi_id.choices = [(e.id, f"{e.nome} (Estoque: {e.estoque})") for e in EPI.query.order_by(EPI.nome).all()]
+    
+    # Preenche as opções para o dropdown de funcionários
     form.employee_id.choices = [(0, 'Selecionar funcionário...')] + [(emp.id, emp.nome) for emp in Employee.query.filter_by(ativo=True).order_by(Employee.nome).all()]
     
+    # Preenche as opções de EPIs para o dropdown dentro do formulário dinâmico
+    epi_choices = [(e.id, f"{e.nome} (Estoque: {e.estoque})") for e in EPI.query.order_by(EPI.nome).all()]
+    for item_form in form.items:
+        item_form.epi_id.choices = epi_choices
+
     if form.validate_on_submit():
-        epi = EPI.query.get_or_404(form.epi_id.data)
-        quantidade = form.quantidade.data
         employee_id = form.employee_id.data if form.employee_id.data != 0 else None
         retirado_por_terceiro = form.retirado_por_terceiro.data.strip()
 
         if not employee_id and not retirado_por_terceiro:
             flash('É necessário selecionar um funcionário ou informar o nome do terceiro.', 'danger')
-            return render_template('epi/saida_form.html', form=form, title='Registrar Retirada de EPI')
-        
-        if epi.estoque < quantidade:
-            flash(f'Estoque insuficiente para "{epi.nome}". Disponível: {epi.estoque}.', 'danger')
-            return render_template('epi/saida_form.html', form=form, title='Registrar Retirada de EPI')
+            return render_template('epi/saida_form.html', form=form, title='Registrar Retirada de EPI', epi_choices_json=epi_choices)
 
-        retirado_por_nome, employee = "", None
-        
-        if retirado_por_terceiro:
-            retirado_por_nome = retirado_por_terceiro
-            employee_id = None
-        elif employee_id:
+        # Validação de estoque antes de salvar
+        for item_data in form.items.data:
+            epi = EPI.query.get(item_data['epi_id'])
+            if not epi or epi.estoque < item_data['quantidade']:
+                flash(f'Estoque insuficiente para "{epi.nome}". Disponível: {epi.estoque}.', 'danger')
+                return render_template('epi/saida_form.html', form=form, title='Registrar Retirada de EPI', epi_choices_json=epi_choices)
+
+        retirado_por_nome = retirado_por_terceiro
+        if employee_id:
             employee = Employee.query.get(employee_id)
             retirado_por_nome = employee.nome
 
-        nova_movimentacao = MovimentacaoEPI(
-            epi_id=epi.id,
-            tipo='SAIDA',
-            quantidade=quantidade,
-            retirado_por=retirado_por_nome,
-            employee_id=employee_id
-        )
-        db.session.add(nova_movimentacao)
+        # Cria a 'Saida' principal
+        nova_saida = EPISaida(employee_id=employee_id, retirado_por=retirado_por_nome)
+        db.session.add(nova_saida)
         
-        epi.estoque -= quantidade
+        # Cria as movimentações individuais para cada item
+        for item_data in form.items.data:
+            epi = EPI.query.get(item_data['epi_id'])
+            quantidade = item_data['quantidade']
+            
+            mov = MovimentacaoEPI(
+                epi_id=epi.id,
+                tipo='SAIDA',
+                quantidade=quantidade,
+                saida=nova_saida # Vincula o item à saida principal
+            )
+            db.session.add(mov)
+            epi.estoque -= quantidade
         
         db.session.commit()
         
-        # Gera o PDF em memória (buffer)
+        # Gera o PDF
         pdf_buffer = io.BytesIO()
-        epi_saida_pdf(pdf_buffer, current_app, nova_movimentacao)
+        epi_saida_pdf(pdf_buffer, current_app, nova_saida)
         pdf_buffer.seek(0)
         
-        # --- INÍCIO: NOVA LÓGICA PARA SALVAR O ARQUIVO NO CADASTRO DO FUNCIONÁRIO ---
+        # Salva o PDF nos documentos do funcionário, se aplicável
         if employee_id:
             try:
-                # Define o caminho e o nome do arquivo
                 subdir = "func_docs"
-                filename = secure_filename(f"comprovante_epi_{nova_movimentacao.id}_{date.today().isoformat()}.pdf")
-                
-                # Cria o diretório se não existir
+                filename = secure_filename(f"comprovante_epi_{nova_saida.id}_{date.today().isoformat()}.pdf")
                 upload_dir = os.path.join(current_app.root_path, current_app.config['UPLOAD_FOLDER'], subdir)
                 os.makedirs(upload_dir, exist_ok=True)
                 
-                # Salva o arquivo do buffer no disco
                 filepath = os.path.join(upload_dir, filename)
                 with open(filepath, 'wb') as f:
                     f.write(pdf_buffer.read())
-                
-                # Reseta o buffer para o início para permitir o download pelo usuário
                 pdf_buffer.seek(0)
 
-                # Cria o registro do documento no banco de dados
                 novo_documento = EmployeeDocument(
                     employee_id=employee_id,
                     tipo="Comprovante de EPI",
-                    descricao=f"Retirada de {quantidade}x {epi.nome}",
-                    arquivo_path=os.path.join(subdir, filename).replace("\\", "/") # Salva o caminho relativo
+                    descricao=f"Retirada de {len(form.items.data)} tipo(s) de EPI.",
+                    arquivo_path=os.path.join(subdir, filename).replace("\\", "/")
                 )
                 db.session.add(novo_documento)
                 db.session.commit()
-                flash(f"Comprovante de retirada salvo nos documentos de {employee.nome}.", "info")
-
+                flash(f"Comprovante salvo nos documentos de {employee.nome}.", "info")
             except Exception as e:
                 db.session.rollback()
-                flash(f"Ocorreu um erro ao salvar o comprovante nos documentos do funcionário: {e}", "danger")
-        # --- FIM DA NOVA LÓGICA ---
+                flash(f"Erro ao salvar comprovante: {e}", "danger")
         
-        return send_file(
-            pdf_buffer,
-            as_attachment=True,
-            download_name=f'comprovante_epi_{nova_movimentacao.id}.pdf',
-            mimetype='application/pdf'
-        )
-    return render_template('epi/saida_form.html', form=form, title='Registrar Retirada de EPI')
+        return send_file(pdf_buffer, as_attachment=True, download_name=f'comprovante_epi_{nova_saida.id}.pdf', mimetype='application/pdf')
+
+    return render_template('epi/saida_form.html', form=form, title='Registrar Retirada de EPI', epi_choices_json=epi_choices)
 
 
 @epi_bp.route('/movimentacoes/relatorio')
@@ -252,20 +247,16 @@ def relatorio_epi():
         mimetype='application/pdf'
     )
 
-@epi_bp.route('/reimprimir_retirada/<int:mov_id>')
+@epi_bp.route('/reimprimir_retirada/<int:saida_id>')
 @login_required
-def reimprimir_retirada(mov_id):
-    mov = MovimentacaoEPI.query.get_or_404(mov_id)
-    if mov.tipo != 'SAIDA':
-        flash("A reimpressão está disponível apenas para movimentações de SAÍDA.", "warning")
-        return redirect(url_for('epi.movimentacao_list'))
-
+def reimprimir_retirada(saida_id):
+    saida = EPISaida.query.get_or_404(saida_id)
     buffer = io.BytesIO()
-    epi_saida_pdf(buffer, current_app, mov)
+    epi_saida_pdf(buffer, current_app, saida)
     buffer.seek(0)
     return send_file(
         buffer,
         as_attachment=True,
-        download_name=f'comprovante_epi_{mov.id}.pdf',
+        download_name=f'comprovante_epi_{saida.id}.pdf',
         mimetype='application/pdf'
     )

@@ -154,25 +154,45 @@ def toxicos_pdf(buffer, app, items, titulo="Exame Toxicológico"):
     doc.build(elems)
 
 # -------------------- COMPROVANTE DE RETIRADA DE EPI --------------------
-def epi_saida_pdf(buffer, app, mov):
+def epi_saida_pdf(buffer, app, saida):
     doc=SimpleDocTemplate(buffer,pagesize=A4,leftMargin=2*cm,rightMargin=2*cm,topMargin=1.5*cm,bottomMargin=1.5*cm)
     elems=[]
     elems.append(Paragraph("Comprovante de Retirada de EPI",H1))
     elems.append(Spacer(1,0.5*cm))
-    data_retirada=mov.data_movimentacao.strftime('%d/%m/%Y às %H:%M')
-    info_data=[["Data da Retirada:",P(data_retirada)],["Equipamento (EPI):",P(f"{_s(mov.epi.nome)} (CA: {_s(mov.epi.ca)})")],["Quantidade:",P(str(mov.quantidade))],]
+    
+    data_retirada=saida.data_saida.strftime('%d/%m/%Y às %H:%M')
+    
+    items_data = [[P("<b>Equipamento (EPI)</b>"), P("<b>Qtd</b>")]]
+    for item in saida.items:
+        items_data.append([
+            P(f"{_s(item.epi.nome)} (CA: {_s(item.epi.ca)})"),
+            P(str(item.quantidade), Centered)
+        ])
+
+    items_table = Table(items_data, colWidths=[15*cm, 2*cm])
+    items_table.setStyle(TableStyle([
+        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ]))
+    
+    info_data=[
+        ["Data da Retirada:", P(data_retirada)],
+        ["Itens Retirados:", items_table]
+    ]
     info_table=Table(info_data,colWidths=[5*cm,12*cm])
     info_table.setStyle(TableStyle([('FONTSIZE',(0,0),(-1,-1),10),('VALIGN',(0,0),(-1,-1),'TOP'),('BOTTOMPADDING',(0,0),(-1,-1),6),]))
     elems.append(info_table)
     elems.append(Spacer(1,1*cm))
+    
     termo_texto="Declaro para os devidos fins que recebi da empresa o(s) equipamento(s) de proteção individual (EPI) descrito(s) acima, em perfeitas condições de uso. Comprometo-me a utilizá-lo(s) durante toda a jornada de trabalho, a zelar pela sua guarda e conservação, e a devolvê-lo(s) quando solicitado. Estou ciente de que o extravio ou dano por uso indevido poderá ser descontado de meu salário, conforme previsto no Art. 462 da CLT."
     elems.append(Paragraph(termo_texto,N))
     elems.append(Spacer(1, 2.5*cm))
-
+    
     assinatura_data=[
         [P("________________________________________", Centered)],
-        [P(f"<b>{_s(mov.retirado_por)}</b>", Centered)],
-        [P(f"CPF: {_s(mov.employee.cpf if mov.employee else 'Não informado')}", Centered)],
+        [P(f"<b>{_s(saida.retirado_por)}</b>", Centered)],
+        [P(f"CPF: {_s(saida.employee.cpf if saida.employee else 'Não informado')}", Centered)],
     ]
     assinatura_table = Table(assinatura_data, colWidths=[17*cm])
     assinatura_table.setStyle(TableStyle([
@@ -236,7 +256,7 @@ def pdv_summary_pdf(buffer, app, movements, start_date, end_date):
 def epi_summary_pdf(buffer, app, movements, start_date, end_date):
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=1.5*cm, rightMargin=1.5*cm, topMargin=1.5*cm, bottomMargin=1.5*cm)
     elems = []
-
+    
     if start_date == end_date:
         periodo_str = f"Data: {start_date.strftime('%d/%m/%Y')}"
     else:
@@ -247,7 +267,7 @@ def epi_summary_pdf(buffer, app, movements, start_date, end_date):
     elems.append(Spacer(1, 0.8*cm))
 
     table_data = [[P('<b>Data/Hora</b>'), P('<b>EPI</b>'), P('<b>Tipo</b>'), P('<b>Qtd</b>'), P('<b>Recebido por</b>')]]
-
+    
     for mov in movements:
         table_data.append([
             P(mov.data_movimentacao.strftime('%d/%m/%Y %H:%M')),
@@ -275,50 +295,61 @@ def proposal_pdf(buffer, app, proposal):
     elems = []
     
     company = proposal.issuing_company
-    header_data = [
-        [P(f"<b>{company.nome_fantasia or company.razao_social}</b>"), P(f"<b>Orçamento Nº:</b> {proposal.id}", BodyRight)],
-        [P(f"{company.logradouro}, {company.numero} - {company.bairro}"), P(f"<b>Data:</b> {proposal.created_at.strftime('%d/%m/%Y')}", BodyRight)],
-        [P(f"{company.cidade} - {company.uf} | CEP: {company.cep}"), ''],
-        [P(f"CNPJ: {company.cnpj}"), ''],
-    ]
-    header_table = Table(header_data, colWidths=[10*cm, 7*cm])
-    header_table.setStyle(TableStyle([('VALIGN', (0,0), (-1,-1), 'TOP')]))
-    elems.append(header_table)
-    elems.append(Spacer(1, 1*cm))
+    logo_path = os.path.join(app.root_path, "static", "img", "logo.png")
+    if os.path.exists(logo_path):
+        logo = Image(logo_path, width=5*cm, height=2.5*cm, hAlign='LEFT')
+        elems.append(logo)
+        elems.append(Spacer(1, 0.5*cm))
 
+    elems.append(Paragraph("Proposta Comercial", H1))
+    elems.append(Spacer(1, 0.5*cm))
+    
     customer = proposal.customer
-    elems.append(P("<b>CLIENTE:</b>"))
-    customer_data = [
-        ['Nome/Razão Social:', P(customer.nome_razao_social)],
-        ['CPF/CNPJ:', P(customer.cpf_cnpj)],
-        ['Endereço:', P(f"{customer.logradouro or ''}, {customer.numero or ''} - {customer.bairro or ''}, {customer.cidade or ''} - {customer.uf or ''}")],
-        ['Contato:', P(f"{customer.telefone or ''} | {customer.email or ''}")],
-    ]
-    customer_table = Table(customer_data, colWidths=[4*cm, 13*cm])
-    customer_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 0.25, colors.grey), ('VALIGN', (0,0), (-1,-1), 'TOP')]))
-    elems.append(customer_table)
+    client_info = f"""
+        <b>Cliente:</b> {customer.nome_razao_social}<br/>
+    """
+    if proposal.attention:
+        client_info += f"<b>A/C:</b> {proposal.attention}<br/>"
+
+    elems.append(Paragraph(client_info, N))
+    elems.append(Spacer(1, 0.5*cm))
+
+    elems.append(Paragraph("A empresa <b>{}</b>, vem por meio desta, apresentar a proposta para prestação de serviços conforme descrito abaixo:".format(company.nome_fantasia or company.razao_social), N))
     elems.append(Spacer(1, 1*cm))
 
-    body_data = [
-        [P('<b>Descrição dos Serviços</b>')],
-        [P(proposal.description.replace('\n', '<br/>'))],
-        [Spacer(1, 0.5*cm)],
-        [P('<b>Valor e Condições</b>')],
-        [P(f"<b>Valor:</b> R$ {proposal.value} ({proposal.billing_unit})")],
-        [Spacer(1, 0.5*cm)],
-        [P(f"<i>Proposta válida por 15 dias.</i>")],
-    ]
-    body_table = Table(body_data, colWidths=[17*cm])
-    body_table.setStyle(TableStyle([('GRID', (0,0), (-1,-1), 0.25, colors.grey), ('TOPPADDING', (0,0), (-1,-1), 6), ('BOTTOMPADDING', (0,0), (-1,-1), 6)]))
-    elems.append(body_table)
+    item_data = [[P("<b>DESCRIÇÃO DO SERVIÇO</b>"), P("<b>VALOR</b>")]]
+    for item in proposal.items:
+        valor_str = f"R$ {item.value}"
+        if item.unit:
+            valor_str += f" (por {item.unit})"
+        item_data.append([P(item.description), P(valor_str)])
+    
+    item_table = Table(item_data, colWidths=[12*cm, 5*cm])
+    item_table.setStyle(TableStyle([
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('TOPPADDING', (0,0), (-1,-1), 6),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    elems.append(item_table)
+    elems.append(Spacer(1, 1*cm))
+    
+    data_emissao = proposal.created_at.strftime('%d de %B de %Y')
+    cidade_emissao = company.cidade or "nossa cidade"
+    elems.append(Paragraph(f"{cidade_emissao}, {data_emissao}", N))
     elems.append(Spacer(1, 2.5*cm))
 
-    signature_data = [
-        [P("____________________________", Centered), P("____________________________", Centered)],
-        [P(f"{proposal.representative_name}", Centered), P(f"{customer.nome_razao_social}", Centered)],
-        [P("Representante", Centered), P("Cliente", Centered)],
+    assinatura_data = [
+        [P("____________________________", Centered)],
+        [P(f"<b>{proposal.representative_name}</b>", Centered)],
+        [P(f"{company.nome_fantasia or company.razao_social}", Centered)],
     ]
-    signature_table = Table(signature_data, colWidths=[8.5*cm, 8.5*cm])
-    elems.append(signature_table)
+    assinatura_table = Table(assinatura_data, colWidths=[17*cm])
+    elems.append(assinatura_table)
+    
+    footer_text = f"<font size='8'>{company.logradouro}, {company.numero} - {company.cidade}/{company.uf} | CNPJ: {company.cnpj}</font>"
+    elems.append(Spacer(1, 2*cm))
+    elems.append(Paragraph(footer_text, Centered))
 
     doc.build(elems)

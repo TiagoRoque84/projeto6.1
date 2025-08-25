@@ -1,23 +1,14 @@
 {% extends 'base.html' %}
 {% block content %}
 <h3>{{ title }}</h3>
-<p>Preencha os dados para registrar a retirada de um EPI e gerar o comprovante em PDF.</p>
+<p>Preencha os dados para registrar a retirada de um ou mais EPIs e gerar o comprovante em PDF.</p>
 <hr>
+
 <form method="post" class="card bg-light p-3">
   {{ form.hidden_tag() }}
-  <div class="row">
-    <div class="col-md-8 mb-3">
-      {{ form.epi_id.label(class="form-label") }}
-      {{ form.epi_id(class="form-select") }}
-    </div>
-    <div class="col-md-4 mb-3">
-      {{ form.quantidade.label(class="form-label") }}
-      {{ form.quantidade(class="form-control", type="number", min="1") }}
-    </div>
-  </div>
-
+  
   <div class="alert alert-info">
-    <b>Atenção:</b> Preencha <b>apenas um</b> dos campos abaixo.
+    <b>Atenção:</b> Preencha <b>apenas um</b> dos campos abaixo para identificar quem está retirando.
   </div>
 
   <div class="row">
@@ -31,7 +22,92 @@
     </div>
   </div>
   
-  {{ form.submit(class="btn btn-primary") }}
-  <a href="{{ url_for('epi.movimentacao_list') }}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+  <hr>
+  <h5>Itens Retirados</h5>
+  <div id="items-container">
+      {% for item_form in form.items %}
+      <div class="row item-row mb-2">
+          <div class="col-md-8">
+              {{ item_form.epi_id(class="form-select") }}
+          </div>
+          <div class="col-md-2">
+              {{ item_form.quantidade(class="form-control", type="number", min="1") }}
+          </div>
+          <div class="col-md-2 d-flex align-items-center">
+              <button type="button" class="btn btn-sm btn-danger remove-item">Remover</button>
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+
+  <button type="button" id="add-item" class="btn btn-secondary mt-2" style="width: fit-content;">Adicionar EPI</button>
+  <hr>
+  
+  {{ form.submit(class="btn btn-primary btn-lg mt-3") }}
+  <a href="{{ url_for('epi.movimentacao_list') }}" class="btn btn-outline-secondary mt-3">Cancelar</a>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Passa as opções de EPI do Python para o JavaScript
+    const epiChoices = JSON.parse('{{ epi_choices_json | tojson | safe }}');
+    const container = document.getElementById('items-container');
+    const addButton = document.getElementById('add-item');
+    let index = container.getElementsByClassName('item-row').length;
+
+    function createSelectWithOptions(name, id) {
+        const select = document.createElement('select');
+        select.className = 'form-select';
+        select.name = name;
+        select.id = id;
+        epiChoices.forEach(choice => {
+            const option = document.createElement('option');
+            option.value = choice[0];
+            option.textContent = choice[1];
+            select.appendChild(option);
+        });
+        return select;
+    }
+
+    function updateRemoveButtons() {
+        container.querySelectorAll('.remove-item').forEach(btn => {
+            btn.onclick = function() {
+                if (container.getElementsByClassName('item-row').length > 1) {
+                    this.closest('.item-row').remove();
+                } else {
+                    alert('A retirada deve ter pelo menos um item.');
+                }
+            }
+        });
+    }
+
+    addButton.addEventListener('click', function() {
+        const newRow = document.createElement('div');
+        newRow.className = 'row item-row mb-2';
+
+        const epiCol = document.createElement('div');
+        epiCol.className = 'col-md-8';
+        const epiSelect = createSelectWithOptions(`items-${index}-epi_id`, `items-${index}-epi_id`);
+        epiCol.appendChild(epiSelect);
+
+        const qtdCol = document.createElement('div');
+        qtdCol.className = 'col-md-2';
+        qtdCol.innerHTML = `<input class="form-control" id="items-${index}-quantidade" name="items-${index}-quantidade" type="number" min="1" value="1">`;
+
+        const btnCol = document.createElement('div');
+        btnCol.className = 'col-md-2 d-flex align-items-center';
+        btnCol.innerHTML = '<button type="button" class="btn btn-sm btn-danger remove-item">Remover</button>';
+
+        newRow.appendChild(epiCol);
+        newRow.appendChild(qtdCol);
+        newRow.appendChild(btnCol);
+        container.appendChild(newRow);
+        
+        index++;
+        updateRemoveButtons();
+    });
+
+    updateRemoveButtons();
+});
+</script>
 {% endblock %}

@@ -181,6 +181,17 @@ class EPI(db.Model):
     fornecedor_id = db.Column(db.Integer, db.ForeignKey('fornecedor.id'), nullable=True)
     estoque = db.Column(db.Integer, default=0)
 
+class EPISaida(db.Model):
+    __tablename__ = 'epi_saida'
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
+    retirado_por = db.Column(db.String(200), nullable=False)
+    data_saida = db.Column(db.DateTime, default=now_sao_paulo)
+    receipt_pdf_path = db.Column(db.String(300))
+    
+    employee = db.relationship('Employee')
+    items = db.relationship('MovimentacaoEPI', backref='saida', lazy='dynamic', cascade="all, delete-orphan")
+
 class MovimentacaoEPI(db.Model):
     __tablename__ = 'movimentacao_epi'
     id = db.Column(db.Integer, primary_key=True)
@@ -188,8 +199,10 @@ class MovimentacaoEPI(db.Model):
     tipo = db.Column(db.String(20), nullable=False)
     quantidade = db.Column(db.Integer, nullable=False)
     data_movimentacao = db.Column(db.DateTime, default=now_sao_paulo)
-    retirado_por = db.Column(db.String(200), nullable=False)
+    retirado_por = db.Column(db.String(200)) 
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)
+    saida_id = db.Column(db.Integer, db.ForeignKey('epi_saida.id'), nullable=True)
+
     epi = db.relationship('EPI', backref='movimentacoes')
     employee = db.relationship('Employee')
 
@@ -211,7 +224,6 @@ class Agendamento(db.Model):
     customer = db.relationship('Customer', backref='agendamentos')
     servico = db.relationship('Servico', backref='agendamentos')
 
-# --- MÓDULO DE ORÇAMENTOS (ESTRUTURA CORRETA) ---
 class Proposal(db.Model):
     __tablename__ = 'proposal'
     id = db.Column(db.Integer, primary_key=True)
@@ -226,8 +238,8 @@ class Proposal(db.Model):
     customer = db.relationship('Customer', backref='proposals')
     items = db.relationship('ProposalItem', backref='proposal', cascade="all, delete-orphan")
 
-@property
-def total_value(self):
+    @property
+    def total_value(self):
         return sum(item.total for item in self.items)
 
 class ProposalItem(db.Model):

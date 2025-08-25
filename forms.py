@@ -1,7 +1,6 @@
 # forms.py
 
 from flask_wtf import FlaskForm
-# --- CORREÇÃO AQUI ---
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, DateField, FileField, IntegerField, TextAreaField, DecimalField, FloatField, FieldList, FormField
 from wtforms.fields import DateTimeField
 from wtforms.validators import DataRequired, Optional, Email, NumberRange
@@ -140,11 +139,16 @@ class EPIEntradaForm(FlaskForm):
     quantidade = IntegerField('Quantidade', validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField('Registrar Entrada')
 
+class EPISaidaItemForm(FlaskForm):
+    class Meta:
+        csrf = False
+    epi_id = SelectField('Equipamento (EPI)', coerce=int, validators=[DataRequired()])
+    quantidade = IntegerField('Qtd', validators=[DataRequired(), NumberRange(min=1)], default=1)
+
 class EPISaidaForm(FlaskForm):
-    epi_id = SelectField('Equipamento (EPI)', coerce=int, validators=[DataRequired(message="Selecione um EPI.")])
-    quantidade = IntegerField('Quantidade', validators=[DataRequired(message="Informe a quantidade."), NumberRange(min=1)])
     employee_id = SelectField('Funcionário (Cadastrado)', coerce=int, validators=[Optional()])
     retirado_por_terceiro = StringField('Nome (Terceiro/Não cadastrado)')
+    items = FieldList(FormField(EPISaidaItemForm), min_entries=1)
     submit = SubmitField('Registrar Retirada e Gerar PDF')
 
 class ServicoForm(FlaskForm):
@@ -175,7 +179,6 @@ class MovementForm(FlaskForm):
     submit = SubmitField("Lançar e imprimir")
     submit_no_print = SubmitField("Apenas lançar")
 
-# --- MÓDULO DE ORÇAMENTOS ---
 class ProposalItemForm(FlaskForm):
     """Sub-formulário para um item do orçamento."""
     class Meta:
