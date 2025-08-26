@@ -5,13 +5,14 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.lib import colors
+from reportlab.lib.utils import ImageReader
 from datetime import date as _date, date
 import os
 from decimal import Decimal
 from collections import defaultdict
 
 styles = getSampleStyleSheet()
-H1 = ParagraphStyle('H1', parent=styles['Heading1'], fontSize=16, spaceAfter=8)
+H1 = ParagraphStyle('H1', parent=styles['Heading1'], fontSize=16, spaceAfter=8, alignment=1) # Centralizado
 H2 = ParagraphStyle('H2', parent=styles['Heading2'], fontSize=12, spaceAfter=6)
 N = styles['Normal']
 BodyRight = ParagraphStyle('BodyRight', parent=styles['Normal'], alignment=2) # 2 = RIGHT
@@ -153,15 +154,44 @@ def toxicos_pdf(buffer, app, items, titulo="Exame Toxicológico"):
     elems.extend([table,Spacer(1,0.4*cm),Paragraph(f"Gerado em {format_date(_date.today())}",N)])
     doc.build(elems)
 
-# -------------------- COMPROVANTE DE RETIRADA DE EPI --------------------
+# -------------------- COMPROVANTE DE RETIRADA DE EPI (ATUALIZADO) --------------------
 def epi_saida_pdf(buffer, app, saida):
-    doc=SimpleDocTemplate(buffer,pagesize=A4,leftMargin=2*cm,rightMargin=2*cm,topMargin=1.5*cm,bottomMargin=1.5*cm)
-    elems=[]
-    elems.append(Paragraph("Comprovante de Retirada de EPI",H1))
-    elems.append(Spacer(1,0.5*cm))
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        leftMargin=2*cm, rightMargin=2*cm, topMargin=1.5*cm, bottomMargin=1.5*cm
+    )
+    elems = []
+
+    logo_path = os.path.join(app.root_path, "static", "img", "logo.png")
+    if os.path.exists(logo_path):
+        img_reader = ImageReader(logo_path)
+        img_width, img_height = img_reader.getSize()
+        aspect = img_height / float(img_width)
+        display_width = 6*cm 
+        display_height = display_width * aspect
+        logo = Image(logo_path, width=display_width, height=display_height, hAlign='CENTER')
+        elems.append(logo)
+        elems.append(Spacer(1, 0.8*cm))
+
+    elems.append(Paragraph("Comprovante de Retirada de EPI", H1))
+    elems.append(Spacer(1, 0.8*cm))
+
+    data_retirada = saida.data_saida.strftime('%d/%m/%Y às %H:%M')
     
-    data_retirada=saida.data_saida.strftime('%d/%m/%Y às %H:%M')
-    
+    info_data = [
+        [P("<b>Data da Retirada:</b>"), P(data_retirada)],
+        [P("<b>Retirado por:</b>"), P(f"<b>{_s(saida.retirado_por)}</b>")]
+    ]
+    info_table = Table(info_data, colWidths=[4*cm, 13*cm])
+    info_table.setStyle(TableStyle([
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('VALIGN', (0,0), (-1,-1), 'TOP'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ]))
+    elems.append(info_table)
+    elems.append(Spacer(1, 0.8*cm))
+
+    elems.append(Paragraph("Itens Retirados:", H2))
     items_data = [[P("<b>Equipamento (EPI)</b>"), P("<b>Qtd</b>")]]
     for item in saida.items:
         items_data.append([
@@ -174,22 +204,15 @@ def epi_saida_pdf(buffer, app, saida):
         ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
         ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ]))
+    ]))
+    elems.append(items_table)
+    elems.append(Spacer(1, 1*cm))
     
-    info_data=[
-        ["Data da Retirada:", P(data_retirada)],
-        ["Itens Retirados:", items_table]
-    ]
-    info_table=Table(info_data,colWidths=[5*cm,12*cm])
-    info_table.setStyle(TableStyle([('FONTSIZE',(0,0),(-1,-1),10),('VALIGN',(0,0),(-1,-1),'TOP'),('BOTTOMPADDING',(0,0),(-1,-1),6),]))
-    elems.append(info_table)
-    elems.append(Spacer(1,1*cm))
+    termo_texto = "Declaro para os devidos fins que recebi da empresa o(s) equipamento(s) de proteção individual (EPI) descrito(s) acima, em perfeitas condições de uso. Comprometo-me a utilizá-lo(s) durante toda a jornada de trabalho, a zelar pela sua guarda e conservação, e a devolvê-lo(s) quando solicitado. Estou ciente de que o extravio ou dano por uso indevido poderá ser descontado de meu salário, conforme previsto no Art. 462 da CLT."
+    elems.append(Paragraph(termo_texto, N))
+    elems.append(Spacer(1, 2*cm))
     
-    termo_texto="Declaro para os devidos fins que recebi da empresa o(s) equipamento(s) de proteção individual (EPI) descrito(s) acima, em perfeitas condições de uso. Comprometo-me a utilizá-lo(s) durante toda a jornada de trabalho, a zelar pela sua guarda e conservação, e a devolvê-lo(s) quando solicitado. Estou ciente de que o extravio ou dano por uso indevido poderá ser descontado de meu salário, conforme previsto no Art. 462 da CLT."
-    elems.append(Paragraph(termo_texto,N))
-    elems.append(Spacer(1, 2.5*cm))
-    
-    assinatura_data=[
+    assinatura_data = [
         [P("________________________________________", Centered)],
         [P(f"<b>{_s(saida.retirado_por)}</b>", Centered)],
         [P(f"CPF: {_s(saida.employee.cpf if saida.employee else 'Não informado')}", Centered)],
@@ -201,10 +224,11 @@ def epi_saida_pdf(buffer, app, saida):
         ('TOPPADDING', (0,0), (-1,-1), 1),
     ]))
     elems.append(assinatura_table)
-
-    elems.append(Spacer(1,2*cm))
-    elems.append(Paragraph(f"Gerado em {format_date(_date.today())}",BodyRight))
+    elems.append(Spacer(1, 1*cm))
+    elems.append(Paragraph(f"Gerado em {format_date(_date.today())}", BodyRight))
+    
     doc.build(elems)
+
 
 # -------------------- RELATÓRIO DIÁRIO DE CAIXA (A4) --------------------
 def pdv_summary_pdf(buffer, app, movements, start_date, end_date):
