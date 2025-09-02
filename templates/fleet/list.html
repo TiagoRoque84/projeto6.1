@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h3 class="mb-0">Frota de Veículos</h3>
+  <a class="btn btn-success" href="{{ url_for('fleet.new') }}">Novo Veículo</a>
+</div>
+<table class="table table-striped table-hover align-middle">
+  <thead>
+    <tr>
+      <th>Nome / Descrição</th>
+      <th>Placa</th>
+      <th>Licenciamento</th>
+      <th>Última KM Registrada</th>
+      <th>Próxima Troca (KM)</th>
+      <th style="width: 220px;"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for v in items %}
+    <tr>
+      <td><b>{{ v.nome }}</b><br><small class="text-muted">{{ v.descricao }}</small></td>
+      <td><span class="badge bg-secondary">{{ v.placa }}</span></td>
+      <td>{{ v.venc_licenciamento.strftime('%d/%m/%Y') if v.venc_licenciamento else '-' }}</td>
+      <td>{{ v.manutencoes.first().km_atual if v.manutencoes.first() else 'N/A' }}</td>
+      <td>{{ v.manutencoes.first().km_proxima_troca if v.manutencoes.first() else 'N/A' }}</td>
+      <td class="text-end">
+        <div class="d-flex gap-2 justify-content-end">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('fleet.details', vehicle_id=v.id) }}">Ver Ficha</a>
+            {# --- BOTÃO DE EXCLUIR ADICIONADO AQUI --- #}
+            <form method="post" action="{{ url_for('fleet.delete', vehicle_id=v.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este veículo? A ação não pode ser desfeita.');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+            </form>
+        </div>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-center">Nenhum veículo cadastrado.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

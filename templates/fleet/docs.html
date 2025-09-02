@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Documentos de: {{ vehicle.nome }} ({{ vehicle.placa }})</h3>
+    <a href="{{ url_for('fleet.details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary">Voltar para a Ficha</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Enviar Novo Documento</h5>
+    <form method="post" enctype="multipart/form-data" class="row g-3">
+      {{ form.hidden_tag() }}
+      <div class="col-md-3">
+        {{ form.tipo.label(class="form-label") }}
+        {{ form.tipo(class="form-control", placeholder="Ex: Licenciamento, Recibo...") }}
+      </div>
+      <div class="col-md-5">
+        {{ form.descricao.label(class="form-label") }}
+        {{ form.descricao(class="form-control", placeholder="Detalhes do documento...") }}
+      </div>
+      <div class="col-md-4">
+        {{ form.arquivo.label(class="form-label") }}
+        {{ form.arquivo(class="form-control") }}
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-success">Enviar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<h4>Documentos Salvos</h4>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Tipo</th>
+      <th>Descrição</th>
+      <th>Enviado em</th>
+      <th>Arquivo</th>
+      <th style="width: 120px;"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {# **CORREÇÃO APLICADA AQUI** #}
+    {% for doc in documents %}
+    <tr>
+      <td>{{ doc.tipo }}</td>
+      <td>{{ doc.descricao }}</td>
+      <td>{{ doc.uploaded_at.strftime('%d/%m/%Y %H:%M') }}</td>
+      <td>
+        {% if doc.arquivo_path %}
+          <a href="{{ url_for('uploads.serve_upload', filename=doc.arquivo_path) }}" target="_blank">Abrir</a>
+        {% else %}-{% endif %}
+      </td>
+      <td class="text-end">
+        <form method="post" action="{{ url_for('fleet.delete_doc', doc_id=doc.id) }}" onsubmit="return confirm('Tem certeza?');">
+            <button class="btn btn-sm btn-outline-danger">Excluir</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="text-center">Nenhum documento encontrado.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

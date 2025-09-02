@@ -41,7 +41,8 @@ def create_app():
     from blueprints.epi import epi_bp
     from blueprints.agendamentos import agendamentos_bp
     from blueprints.holerites import holerites_bp
-    from blueprints.proposals import proposals_bp # <-- Adicionado
+    from blueprints.proposals import proposals_bp
+    from blueprints.fleet.routes import fleet_bp # <-- Adicionado
     
     # Registro dos blueprints
     app.register_blueprint(main_bp)
@@ -58,7 +59,8 @@ def create_app():
     app.register_blueprint(epi_bp, url_prefix='/epi')
     app.register_blueprint(agendamentos_bp, url_prefix='/agendamentos')
     app.register_blueprint(holerites_bp, url_prefix='/holerites')
-    app.register_blueprint(proposals_bp, url_prefix='/orcamentos') # <-- Adicionado
+    app.register_blueprint(proposals_bp, url_prefix='/orcamentos')
+    app.register_blueprint(fleet_bp, url_prefix='/frota') # <-- Adicionado
     
     print("Home ('/') apontada para dash.dashboard.")
     

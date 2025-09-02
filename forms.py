@@ -175,12 +175,14 @@ class MovementForm(FlaskForm):
     material = StringField("Material Pesado")
     peso = FloatField("Peso (kg)", validators=[Optional()])
     pagamento = SelectField("Forma de pagamento", choices=[ ("DINHEIRO","Dinheiro"), ("PIX","Pix"), ("CARTAO","Cartão"), ("CONTA", "Na Conta (Fiado)") ], validators=[DataRequired()])
-    descricao = StringField("Descrição/Motivo", validators=[DataRequired()])
+    
+    # --- CORREÇÃO APLICADA AQUI ---
+    descricao = StringField("Descrição/Motivo", validators=[Optional()])
+
     submit = SubmitField("Lançar e imprimir")
     submit_no_print = SubmitField("Apenas lançar")
 
 class ProposalItemForm(FlaskForm):
-    """Sub-formulário para um item do orçamento."""
     class Meta:
         csrf = False
     description = StringField('Descrição do Serviço', validators=[DataRequired()])
@@ -199,3 +201,27 @@ class ProposalForm(FlaskForm):
         ('Recusado', 'Recusado')
     ], default='Pendente')
     submit = SubmitField('Salvar Orçamento')
+    
+class MaintenanceLogForm(FlaskForm):
+    data = DateField('Data', validators=[DataRequired()])
+    km_atual = IntegerField('KM Atual', validators=[Optional()])
+    tipo_servico = StringField('Tipo de Serviço', validators=[DataRequired()], default='Troca de Óleo')
+    local = StringField('Local/Oficina')
+    oleo_utilizado = StringField('Óleo/Peça Utilizada')
+    responsavel = StringField('Responsável')
+    trocou_filtro = BooleanField('Trocou Filtro de Óleo?')
+    submit = SubmitField('Salvar Manutenção')
+
+class VehicleForm(FlaskForm):
+    nome = StringField('Nome do Veículo', validators=[DataRequired()])
+    descricao = StringField('Descrição (Marca, Modelo, Ano)')
+    placa = StringField('Placa', validators=[DataRequired()])
+    renavam = StringField('RENAVAM')
+    venc_licenciamento = DateField('Vencimento do Licenciamento', validators=[Optional()])
+    submit = SubmitField('Salvar Veículo')
+
+class VehicleDocumentForm(FlaskForm):
+    tipo = StringField("Tipo", validators=[DataRequired()])
+    descricao = StringField("Descrição")
+    arquivo = FileField("Arquivo (PDF, JPG, PNG)", validators=[DataRequired()])
+    submit = SubmitField("Enviar Documento")

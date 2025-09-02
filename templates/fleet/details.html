@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Ficha do Veículo: {{ vehicle.nome }}</h3>
+    <a href="{{ url_for('fleet.list') }}" class="btn btn-outline-secondary">Voltar para a Frota</a>
+</div>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="row">
+        <div class="col-md-8">
+            <h5 class="card-title">Dados Gerais</h5>
+            <p class="mb-1"><strong>Placa:</strong> <span class="badge bg-dark">{{ vehicle.placa }}</span> | <strong>RENAVAM:</strong> {{ vehicle.renavam or '-' }}</p>
+            <p class="mb-1"><strong>Descrição:</strong> {{ vehicle.descricao or '-' }}</p>
+            <p><strong>Vencimento do Licenciamento:</strong> {{ vehicle.venc_licenciamento.strftime('%d/%m/%Y') if vehicle.venc_licenciamento else '-' }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('fleet.docs', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-outline-info">Documentos ({{ vehicle.documentos.count() }})</a>
+            <a href="{{ url_for('fleet.edit', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-outline-primary">Editar Dados</a>
+            {# --- BOTÃO DE EXCLUIR ADICIONADO AQUI --- #}
+            <form method="post" action="{{ url_for('fleet.delete', vehicle_id=vehicle.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este veículo e todos os seus registros?');" class="d-inline ms-1">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Excluir Veículo</button>
+            </form>
+        </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <strong>Registrar Nova Manutenção</strong>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {{ form.hidden_tag() }}
+            <div class="row g-3">
+                <div class="col-md-4">{{ form.data.label }} {{ form.data(class="form-control") }}</div>
+                <div class="col-md-4">{{ form.km_atual.label }} {{ form.km_atual(class="form-control", type="number") }}</div>
+                <div class="col-md-4">{{ form.tipo_servico.label }} {{ form.tipo_servico(class="form-control", placeholder="Troca de Óleo, Pneus, Freios...") }}</div>
+                <div class="col-md-4">{{ form.local.label }} {{ form.local(class="form-control") }}</div>
+                <div class="col-md-4">{{ form.oleo_utilizado.label }} {{ form.oleo_utilizado(class="form-control") }}</div>
+                <div class="col-md-4">{{ form.responsavel.label }} {{ form.responsavel(class="form-control") }}</div>
+                <div class="col-md-12 d-flex align-items-center gap-3">
+                    <div class="form-check">
+                        {{ form.trocou_filtro(class="form-check-input") }}
+                        {{ form.trocou_filtro.label(class="form-check-label") }}
+                    </div>
+                    {{ form.submit(class="btn btn-success") }}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h4>Histórico de Troca de Óleo</h4>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead><tr><th>Data</th><th>KM Atual</th><th>Próx. Troca (KM)</th><th>Próx. Troca (Data)</th><th>Filtro?</th><th>Óleo</th><th>Local</th><th>Responsável</th></tr></thead>
+                <tbody>
+                    {% for log in oil_changes %}
+                    <tr>
+                        <td>{{ log.data.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ log.km_atual }}</td>
+                        <td>{{ log.km_proxima_troca }}</td>
+                        <td>{{ log.data_proxima_troca.strftime('%d/%m/%Y') if log.data_proxima_troca else '-' }}</td>
+                        <td>{% if log.trocou_filtro %}Sim{% else %}Não{% endif %}</td>
+                        <td>{{ log.oleo_utilizado }}</td>
+                        <td>{{ log.local }}</td>
+                        <td>{{ log.responsavel }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="text-center">Nenhum registro de troca de óleo.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-12 mt-4">
+        <h4>Outras Manutenções</h4>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead><tr><th>Data</th><th>KM</th><th>Serviço Realizado</th><th>Local</th><th>Responsável</th></tr></thead>
+                <tbody>
+                    {% for log in other_maintenances %}
+                    <tr>
+                        <td>{{ log.data.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ log.km_atual }}</td>
+                        <td>{{ log.tipo_servico }}</td>
+                        <td>{{ log.local }}</td>
+                        <td>{{ log.responsavel }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center">Nenhum outro tipo de manutenção registrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

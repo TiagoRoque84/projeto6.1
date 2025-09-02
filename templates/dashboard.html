@@ -59,7 +59,7 @@
 </div>
 {% endmacro %}
 
-{# --- INÍCIO: NOVA MACRO PARA OS MODAIS DE AGENDAMENTO --- #}
+{# Macro para os modais de agendamento #}
 {% macro render_agendamento_modal(modal_id, title, items) %}
 <div class="modal fade" id="{{ modal_id }}" tabindex="-1">
   <div class="modal-dialog modal-xl">
@@ -84,7 +84,7 @@
             {% for item in items %}
             <tr>
               <td>{{ item.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
-              <td>{{ item.customer.nome_razao_social }}</td>
+              <td>{{ item.customer.nome_razao_social if item.customer else (item.visitante_nome or '-') }}</td>
               <td>{{ item.servico.nome }}</td>
               <td>{{ item.local }}</td>
               <td class="text-end"><a href="{{ url_for('agendamentos.agendamento_edit', agendamento_id=item.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">Ver Agendamento</a></td>
@@ -96,15 +96,60 @@
         <p>Nenhum agendamento encontrado.</p>
         {% endif %}
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{# Macro para os modais da frota #}
+{% macro render_frota_modal(modal_id, title, items, tipo) %}
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ title }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        {% if items %}
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              <th>Veículo</th>
+              <th>Placa</th>
+              {% if tipo == 'licenciamento' %}
+                <th>Vencimento</th>
+              {% else %}
+                <th>Última KM</th>
+                <th>Próxima Troca (KM)</th>
+              {% endif %}
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>{{ item.nome }}</td>
+              <td>{{ item.placa }}</td>
+               {% if tipo == 'licenciamento' %}
+                <td>{{ item.venc_licenciamento.strftime('%d/%m/%Y') if item.venc_licenciamento else '' }}</td>
+              {% else %}
+                <td>{{ item.manutencoes.first().km_atual if item.manutencoes.first() else 'N/A' }}</td>
+                <td>{{ item.manutencoes.first().km_proxima_troca if item.manutencoes.first() else 'N/A' }}</td>
+              {% endif %}
+              <td class="text-end"><a href="{{ url_for('fleet.details', vehicle_id=item.id) }}" class="btn btn-sm btn-outline-primary" target="_blank">Ver Ficha</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p>Nenhum item encontrado.</p>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
 {% endmacro %}
-{# --- FIM: NOVA MACRO --- #}
-
 
 <div class="row g-3">
     <div class="col-md-3">
@@ -158,7 +203,9 @@
         </div>
     </div>
 </div>
+
 <hr class="my-4">
+
 <h5>Vencimentos de Colaboradores (Ativos)</h5>
 <div class="row g-3">
     <div class="col-md-3"><div class="card border-danger" role="button" data-bs-toggle="modal" data-bs-target="#asoVencidosModal"><div class="card-body"><div class="text-muted">ASOs Vencidos</div><div class="display-6">{{ aso_venc }}</div></div></div></div>
@@ -167,6 +214,36 @@
     <div class="col-md-3"><div class="card border-warning" role="button" data-bs-toggle="modal" data-bs-target="#cnhAVencerModal"><div class="card-body"><div class="text-muted">CNHs a Vencer (30d)</div><div class="display-6">{{ cnh_avencer }}</div></div></div></div>
     <div class="col-md-3 mt-3"><div class="card border-danger" role="button" data-bs-toggle="modal" data-bs-target="#toxVencidosModal"><div class="card-body"><div class="text-muted">Tóxicos Vencidos</div><div class="display-6">{{ tox_venc }}</div></div></div></div>
     <div class="col-md-3 mt-3"><div class="card border-warning" role="button" data-bs-toggle="modal" data-bs-target="#toxAVencerModal"><div class="card-body"><div class="text-muted">Tóxicos a Vencer (30d)</div><div class="display-6">{{ tox_avencer }}</div></div></div></div>
+</div>
+
+<hr class="my-4">
+
+<h5>Controle de Frota</h5>
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card border-danger" role="button" data-bs-toggle="modal" data-bs-target="#licencVencidosModal">
+            <div class="card-body">
+                <div class="text-muted">Licenciamentos Vencidos</div>
+                <div class="display-6">{{ licenc_venc }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning" role="button" data-bs-toggle="modal" data-bs-target="#licencAVencerModal">
+            <div class="card-body">
+                <div class="text-muted">Licenciamentos a Vencer (30d)</div>
+                <div class="display-6">{{ licenc_avencer }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning" role="button" data-bs-toggle="modal" data-bs-target="#oleoAVencerModal">
+            <div class="card-body">
+                <div class="text-muted">Troca de Óleo Próxima</div>
+                <div class="display-6">{{ oleo_avencer }}</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 {# Modais de Documentos e Colaboradores #}
@@ -179,9 +256,13 @@
 {{ render_modal('toxVencidosModal', 'Exames Toxicológicos Vencidos', tox_venc_list) }}
 {{ render_modal('toxAVencerModal', 'Exames Toxicológicos a Vencer (30d)', tox_avencer_list) }}
 
-{# --- INÍCIO: NOVOS MODAIS DE AGENDAMENTO --- #}
+{# Modais de Agendamento #}
 {{ render_agendamento_modal('agendamentosAtrasadosModal', 'Agendamentos Atrasados', agendamentos_atrasados_list) }}
 {{ render_agendamento_modal('agendamentosProximosModal', 'Próximos Agendamentos (7 dias)', agendamentos_proximos_list) }}
-{# --- FIM: NOVOS MODAIS --- #}
+
+{# Modais de Frota #}
+{{ render_frota_modal('licencVencidosModal', 'Licenciamentos Vencidos', licenc_venc_list, 'licenciamento') }}
+{{ render_frota_modal('licencAVencerModal', 'Licenciamentos a Vencer (30d)', licenc_avencer_list, 'licenciamento') }}
+{{ render_frota_modal('oleoAVencerModal', 'Troca de Óleo Próxima (até 1000km)', veiculos_oleo_avencer, 'oleo') }}
 
 {% endblock %}

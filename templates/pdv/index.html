@@ -1,5 +1,20 @@
 {% extends 'base.html' %}
 {% block content %}
+
+{# --- BLOCO PARA EXIBIR ERROS DO FORMULÁRIO (ADICIONADO) --- #}
+{% if form.errors %}
+<div class="alert alert-danger">
+    <p><strong>Por favor, corrija os erros abaixo:</strong></p>
+    <ul class="mb-0">
+        {% for field, errors in form.errors.items() %}
+            {% for error in errors %}
+                <li>{{ form[field].label }}: {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 <h3>Caixa / Movimentos</h3>
 <form method="post" class="row g-3">
   {{ form.hidden_tag() }}

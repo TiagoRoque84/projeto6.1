@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>{{ title }}</h3>
+<hr>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      {{ form.nome.label(class="form-label") }}
+      {{ form.nome(class="form-control", placeholder="Ex: Caminhão Mercedes, Fiat Strada...") }}
+    </div>
+    <div class="col-md-6 mb-3">
+      {{ form.descricao.label(class="form-label") }}
+      {{ form.descricao(class="form-control", placeholder="Ex: Axor 2544, Endurance 1.4...") }}
+    </div>
+    <div class="col-md-4 mb-3">
+      {{ form.placa.label(class="form-label") }}
+      {{ form.placa(class="form-control") }}
+    </div>
+    <div class="col-md-4 mb-3">
+      {{ form.renavam.label(class="form-label") }}
+      {{ form.renavam(class="form-control") }}
+    </div>
+    <div class="col-md-4 mb-3">
+      {{ form.venc_licenciamento.label(class="form-label") }}
+      {{ form.venc_licenciamento(class="form-control") }}
+    </div>
+  </div>
+  
+  <div class="d-flex gap-2">
+    {{ form.submit(class="btn btn-primary") }}
+    <a href="{{ url_for('fleet.list') }}" class="btn btn-outline-secondary">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

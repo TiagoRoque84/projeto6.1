@@ -253,3 +253,39 @@ class ProposalItem(db.Model):
     @property
     def total(self):
         return self.value
+
+class Vehicle(db.Model):
+    __tablename__ = 'vehicle'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(150), nullable=False)
+    descricao = db.Column(db.String(300))
+    placa = db.Column(db.String(10), unique=True, nullable=False)
+    renavam = db.Column(db.String(20), unique=True)
+    venc_licenciamento = db.Column(db.Date)
+    
+    manutencoes = db.relationship('MaintenanceLog', backref='vehicle', lazy='dynamic', order_by="desc(MaintenanceLog.data)", cascade="all, delete-orphan")
+    documentos = db.relationship('VehicleDocument', backref='vehicle', lazy='dynamic', cascade="all, delete-orphan")
+
+class MaintenanceLog(db.Model):
+    __tablename__ = 'maintenance_log'
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'), nullable=False)
+    data = db.Column(db.Date, nullable=False)
+    km_atual = db.Column(db.Integer)
+    tipo_servico = db.Column(db.String(100), default="Troca de Óleo")
+    local = db.Column(db.String(200))
+    oleo_utilizado = db.Column(db.String(100))
+    responsavel = db.Column(db.String(150))
+    
+    trocou_filtro = db.Column(db.Boolean, default=False)
+    km_proxima_troca = db.Column(db.Integer)
+    data_proxima_troca = db.Column(db.Date)
+
+class VehicleDocument(db.Model):
+    __tablename__ = 'vehicle_document'
+    id = db.Column(db.Integer, primary_key=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'), nullable=False)
+    tipo = db.Column(db.String(80))
+    descricao = db.Column(db.String(200))
+    arquivo_path = db.Column(db.String(300))
+    uploaded_at = db.Column(db.DateTime, default=now_sao_paulo)
