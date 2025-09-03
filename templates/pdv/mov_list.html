@@ -58,5 +58,45 @@
     {% endfor %}
   </tbody>
 </table>
-<div class="alert alert-info">Saldo parcial dos lançamentos exibidos (não inclui vendas 'Na Conta'): <b>R$ {{ '%.2f'|format(total|float) }}</b></div>
+
+<!-- PAINEL DE TOTAIS ATUALIZADO -->
+<div class="card border-primary mt-4">
+    <div class="card-header bg-primary text-white">
+        <strong>Resumo dos Lançamentos Exibidos</strong>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="alert alert-success p-2">
+                    <strong>(+) Entradas em Dinheiro:</strong><br>
+                    <span class="fs-5">R$ {{ '%.2f'|format(totals.DINHEIRO|float) }}</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="alert alert-secondary p-2">
+                    <strong>(+) Entradas em PIX:</strong><br>
+                    <span class="fs-5">R$ {{ '%.2f'|format(totals.PIX|float) }}</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="alert alert-secondary p-2">
+                    <strong>(+) Entradas em Cartão:</strong><br>
+                    <span class="fs-5">R$ {{ '%.2f'|format(totals.CARTAO|float) }}</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="alert alert-danger p-2">
+                    <strong>(-) Saídas (Sangria/Retirada):</strong><br>
+                    <span class="fs-5">R$ {{ '%.2f'|format(totals.SAIDAS|float) }}</span>
+                </div>
+            </div>
+        </div>
+        <hr>
+        <div class="alert alert-info text-center">
+            <h4>SALDO EM CAIXA (DINHEIRO): <strong>R$ {{ '%.2f'|format(saldo_dinheiro|float) }}</strong></h4>
+            <small>(Entradas em Dinheiro - Saídas)</small>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

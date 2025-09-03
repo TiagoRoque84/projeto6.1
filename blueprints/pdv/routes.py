@@ -12,12 +12,9 @@ from models import db, User, CashMovement, Company, Customer
 from forms import MovementForm 
 from pdf_reports import pdv_summary_pdf
 
-# --- FUNÇÃO ATUALIZADA PARA BUSCAR EMPRESA PADRÃO ---
 def _get_company_header():
     try:
-        # Tenta buscar a empresa marcada como padrão
         c = Company.query.filter_by(is_default=True).first()
-        # Se nenhuma for marcada, pega a primeira do banco como fallback
         if not c:
             c = Company.query.order_by(Company.id.asc()).first()
         
@@ -29,9 +26,7 @@ def _get_company_header():
             }
     except Exception:
         pass
-    # Retorno padrão caso não haja nenhuma empresa no banco
     return { "nome": "Empresa Não Configurada", "endereco": "", "cnpj": "" }
-# --- FIM DA ATUALIZAÇÃO ---
 
 @pdv_bp.route("/", methods=["GET","POST"])
 @login_required
@@ -66,12 +61,25 @@ def pdv_list():
         like = f"%{q}%"
         query = query.filter((CashMovement.descricao.ilike(like)) | (CashMovement.ticket_ref.ilike(like)))
     items = query.limit(200).all()
-    total = 0
+
+    # --- LÓGICA DE TOTAIS ATUALIZADA ---
+    totals = {
+        'DINHEIRO': Decimal('0.0'),
+        'PIX': Decimal('0.0'),
+        'CARTAO': Decimal('0.0'),
+        'SAIDAS': Decimal('0.0')
+    }
+
     for i in items:
-        valor = float(i.valor or 0)
-        if (i.tipo == 'VENDA' and i.pagamento != 'CONTA') or (i.tipo == 'PAGAMENTO' and i.pagamento != 'BAIXA'): total += valor
-        elif i.tipo in ['SANGRIA', 'RETIRADA']: total -= valor
-    return render_template("pdv/mov_list.html", items=items, total=total, q=q)
+        valor = i.valor or Decimal('0.0')
+        if (i.tipo == 'VENDA' or i.tipo == 'PAGAMENTO') and i.pagamento in totals:
+            totals[i.pagamento] += valor
+        elif i.tipo in ['SANGRIA', 'RETIRADA']:
+            totals['SAIDAS'] += valor
+    
+    saldo_dinheiro = totals['DINHEIRO'] - totals['SAIDAS']
+
+    return render_template("pdv/mov_list.html", items=items, totals=totals, saldo_dinheiro=saldo_dinheiro, q=q)
 
 @pdv_bp.route("/recibo/<int:mov_id>")
 @login_required
