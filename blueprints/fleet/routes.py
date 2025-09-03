@@ -1,6 +1,7 @@
 # blueprints/fleet/routes.py
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_required
+from sqlalchemy import func, or_
 from . import fleet_bp
 from models import db, Vehicle, MaintenanceLog, VehicleDocument
 from forms import VehicleForm, MaintenanceLogForm, VehicleDocumentForm
@@ -14,7 +15,26 @@ from flask import current_app
 @login_required
 def list():
     vehicles = Vehicle.query.order_by(Vehicle.nome).all()
-    return render_template('fleet/list.html', items=vehicles)
+    
+    # Prepara uma lista de dicionários com os dados prontos para a tabela
+    vehicle_list_data = []
+    for v in vehicles:
+        # Busca a última troca de óleo usando lógica Python para garantir
+        last_oil_change = None
+        # Garante que os logs estão ordenados pela data mais recente primeiro
+        all_logs_sorted = v.manutencoes.order_by(MaintenanceLog.data.desc()).all()
+        for log in all_logs_sorted:
+            # Normaliza o texto para minúsculas e sem acento para a comparação
+            if 'oleo' in log.tipo_servico.lower().replace('ó', 'o'):
+                last_oil_change = log
+                break # Encontrou o mais recente, pode parar o loop
+
+        vehicle_list_data.append({
+            'vehicle': v,
+            'last_oil_change': last_oil_change
+        })
+
+    return render_template('fleet/list.html', items=vehicle_list_data)
 
 @fleet_bp.route('/novo', methods=['GET', 'POST'])
 @login_required
@@ -25,7 +45,7 @@ def new():
         form.populate_obj(new_vehicle)
         db.session.add(new_vehicle)
         db.session.commit()
-        flash('Veículo cadastrado com sucesso!', 'success')
+        flash('Veículo registado com sucesso!', 'success')
         return redirect(url_for('fleet.list'))
     return render_template('fleet/form.html', form=form, title='Novo Veículo')
 
@@ -51,7 +71,7 @@ def details(vehicle_id):
         new_log = MaintenanceLog(vehicle_id=vehicle.id)
         form.populate_obj(new_log)
         
-        if new_log.tipo_servico.lower().strip() == 'troca de óleo':
+        if 'oleo' in new_log.tipo_servico.lower().replace('ó', 'o'):
             if new_log.km_atual:
                 new_log.km_proxima_troca = new_log.km_atual + 5000
             if new_log.data:
@@ -62,8 +82,15 @@ def details(vehicle_id):
         flash('Novo histórico de manutenção adicionado!', 'success')
         return redirect(url_for('fleet.details', vehicle_id=vehicle.id))
     
-    oil_changes = vehicle.manutencoes.filter(MaintenanceLog.tipo_servico.ilike('%óleo%')).all()
-    other_maintenances = vehicle.manutencoes.filter(~MaintenanceLog.tipo_servico.ilike('%óleo%')).all()
+    all_logs = vehicle.manutencoes.all()
+    oil_changes = []
+    other_maintenances = []
+    for log in all_logs:
+        tipo_servico_normalizado = log.tipo_servico.lower().replace('ó', 'o')
+        if 'oleo' in tipo_servico_normalizado:
+            oil_changes.append(log)
+        else:
+            other_maintenances.append(log)
     
     return render_template('fleet/details.html', 
                            vehicle=vehicle, 
@@ -90,7 +117,7 @@ def docs(vehicle_id):
                 db.session.commit()
                 flash("Documento do veículo enviado.", "success")
         else:
-            flash("Nenhum arquivo selecionado.", "danger")
+            flash("Nenhum ficheiro selecionado.", "danger")
         return redirect(url_for('fleet.docs', vehicle_id=vehicle.id))
 
     documents = vehicle.documentos.order_by(VehicleDocument.uploaded_at.desc()).all()
@@ -104,7 +131,7 @@ def delete_doc(doc_id):
     vehicle_id = doc.vehicle_id
     try:
         if doc.arquivo_path:
-            full_path = os.path.join(current_app.root_path, "uploads", doc.arquivo_path)
+            full_path = os.path.join(current_app.root_path, "uploads", doc.arquivo_path.replace('/', os.sep))
             if os.path.exists(full_path):
                 os.remove(full_path)
         db.session.delete(doc)
@@ -115,16 +142,14 @@ def delete_doc(doc_id):
         flash(f"Erro ao excluir documento: {e}", "danger")
     return redirect(url_for('fleet.docs', vehicle_id=vehicle_id))
 
-# --- FUNÇÃO DE EXCLUIR VEÍCULO ADICIONADA AQUI ---
 @fleet_bp.route('/<int:vehicle_id>/excluir', methods=['POST'])
 @login_required
 def delete(vehicle_id):
     vehicle = Vehicle.query.get_or_404(vehicle_id)
     try:
-        # A exclusão dos documentos e manutenções agora é automática por causa do "cascade" no models.py
         db.session.delete(vehicle)
         db.session.commit()
-        flash('Veículo e todos os seus registros foram excluídos com sucesso.', 'success')
+        flash('Veículo e todos os seus registos foram excluídos com sucesso.', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Erro ao excluir o veículo: {e}', 'danger')

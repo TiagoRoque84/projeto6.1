@@ -4,6 +4,7 @@ from datetime import datetime, date
 from extensions import db
 from flask_login import UserMixin
 import pytz
+from sqlalchemy import func, or_
 
 def now_sao_paulo():
     """Retorna o horário atual no fuso de São Paulo."""
