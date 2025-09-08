@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if form.errors %}
+<div class="alert alert-danger">
+    <p><strong>Por favor, corrija os erros abaixo:</strong></p>
+    <ul class="mb-0">
+        {% for field, errors in form.errors.items() %}
+            {% for error in errors %}
+                <li>{{ form[field].label }}: {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<h3>{{ title }}</h3>
+<form method="post" action="{{ url_for('pdv.edit_movement', mov_id=mov_id) }}" class="row g-3">
+  {{ form.hidden_tag() }}
+
+  <div class="col-md-4">
+    {{ form.tipo.label(class_='form-label') }}
+    {{ form.tipo(class_='form-select', id='tipo_movimento') }}
+  </div>
+  <div class="col-md-4">
+    {{ form.valor.label(class_='form-label') }}
+    {{ form.valor(class_='form-control', step='0.01') }}
+  </div>
+  <div class="col-md-4">
+    {{ form.pagamento.label(class_='form-label') }}
+    {{ form.pagamento(class_='form-select', id='pagamento') }}
+  </div>
+
+  <div id="weighing-fields" class="row g-3 m-0 p-0">
+    <div class="col-12 mt-3">
+      {{ form.customer_id.label(class_='form-label') }}
+      {{ form.customer_id(class_='form-select') }}
+    </div>
+    <div class="col-md-4">{{ form.ticket_ref.label(class_='form-label') }} {{ form.ticket_ref(class_='form-control') }}</div>
+    <div class="col-md-4">{{ form.placa.label(class_='form-label') }} {{ form.placa(class_='form-control') }}</div>
+    <div class="col-md-4">{{ form.material.label(class_='form-label') }} {{ form.material(class_='form-control') }}</div>
+    <div class="col-md-4">{{ form.peso.label(class_='form-label') }} {{ form.peso(class_='form-control') }}</div>
+  </div>
+  
+  <div class="col-md-12">
+    {{ form.descricao.label(class_='form-label') }}
+    {{ form.descricao(class_='form-control') }}
+  </div>
+  
+  <div class="col-12 d-flex gap-2">
+    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+    <a class="btn btn-outline-secondary" href="{{ url_for('pdv.pdv_list') }}">Cancelar</a>
+  </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tipoSelect = document.getElementById('tipo_movimento');
+  const weighingFields = document.getElementById('weighing-fields');
+  const pagamentoSelect = document.getElementById('pagamento');
+
+  function toggleFields() {
+    const isVenda = tipoSelect.value === 'VENDA';
+    weighingFields.style.display = isVenda ? 'flex' : 'none';
+    
+    const contaOption = pagamentoSelect.querySelector('option[value="CONTA"]');
+    if (contaOption) {
+      contaOption.disabled = !isVenda;
+    }
+    if (!isVenda && pagamentoSelect.value === 'CONTA') {
+      pagamentoSelect.value = 'DINHEIRO';
+    }
+  }
+
+  tipoSelect.addEventListener('change', toggleFields);
+  toggleFields();
+});
+</script>
+{% endblock %}

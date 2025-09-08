@@ -37,10 +37,10 @@ def pdv_index():
         tipo, pagamento, customer_id = form.tipo.data, form.pagamento.data, form.customer_id.data if form.customer_id.data != 0 else None
         if pagamento == "CONTA" and tipo != 'VENDA':
             flash("A opção 'Na Conta' só está disponível para 'Venda / Pesagem'.", "danger")
-            return render_template("pdv/index.html", form=form)
+            return render_template("pdv/index.html", form=form, title="Caixa / Movimentos")
         if pagamento == "CONTA" and not customer_id:
-            flash("Para lançar 'Na Conta', você precisa selecionar um cliente.", "danger")
-            return render_template("pdv/index.html", form=form)
+            flash("Para lançar 'Na Conta', você precisa de selecionar um cliente.", "danger")
+            return render_template("pdv/index.html", form=form, title="Caixa / Movimentos")
         mov = CashMovement(tipo=tipo, valor=Decimal(form.valor.data or 0), pagamento=pagamento, descricao=form.descricao.data, ticket_ref=form.ticket_ref.data, user_id=getattr(current_user, "id", None), customer_id=customer_id, placa=form.placa.data, material=form.material.data, peso=form.peso.data, status="Pendente" if pagamento == "CONTA" else "Pago")
         db.session.add(mov)
         db.session.commit()
@@ -50,7 +50,7 @@ def pdv_index():
         else:
             flash(f"Movimento '{tipo}' lançado com sucesso!", "success")
             return redirect(url_for("pdv.pdv_index"))
-    return render_template("pdv/index.html", form=form)
+    return render_template("pdv/index.html", form=form, title="Caixa / Movimentos")
 
 @pdv_bp.route("/mov")
 @login_required
@@ -62,7 +62,6 @@ def pdv_list():
         query = query.filter((CashMovement.descricao.ilike(like)) | (CashMovement.ticket_ref.ilike(like)))
     items = query.limit(200).all()
 
-    # --- LÓGICA DE TOTAIS ATUALIZADA ---
     totals = {
         'DINHEIRO': Decimal('0.0'),
         'PIX': Decimal('0.0'),
@@ -119,3 +118,38 @@ def relatorio_diario():
     pdv_summary_pdf(buffer, None, movements, start_date, end_date)
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name=f'relatorio_caixa_{start_date.strftime("%Y-%m-%d")}_a_{end_date.strftime("%Y-%m-%d")}.pdf', mimetype='application/pdf')
+
+# --- INÍCIO: NOVAS ROTAS PARA EDITAR E EXCLUIR ---
+@pdv_bp.route('/mov/<int:mov_id>/editar', methods=['GET', 'POST'])
+@login_required
+def edit_movement(mov_id):
+    mov = CashMovement.query.get_or_404(mov_id)
+    form = MovementForm(obj=mov)
+    form.customer_id.choices = [(0, "Nenhum (pagamento à vista)")] + [(c.id, c.nome_razao_social) for c in Customer.query.filter_by(ativo=True).order_by(Customer.nome_razao_social)]
+    
+    if form.validate_on_submit():
+        form.populate_obj(mov) # Atualiza o objeto 'mov' com os dados do formulário
+        mov.customer_id = form.customer_id.data if form.customer_id.data != 0 else None
+        db.session.commit()
+        flash('Movimentação atualizada com sucesso!', 'success')
+        return redirect(url_for('pdv.pdv_list'))
+        
+    # No GET, preenche o formulário com os dados existentes
+    if request.method == 'GET':
+        form.customer_id.data = mov.customer_id or 0
+
+    return render_template('pdv/edit_movement.html', form=form, title='Editar Movimentação', mov_id=mov_id)
+
+@pdv_bp.route('/mov/<int:mov_id>/excluir', methods=['POST'])
+@login_required
+def delete_movement(mov_id):
+    mov = CashMovement.query.get_or_404(mov_id)
+    try:
+        db.session.delete(mov)
+        db.session.commit()
+        flash('Movimentação excluída com sucesso.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir a movimentação: {e}', 'danger')
+    return redirect(url_for('pdv.pdv_list'))
+# --- FIM: NOVAS ROTAS ---

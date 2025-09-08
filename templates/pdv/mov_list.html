@@ -33,7 +33,7 @@
       <th>Forma</th>
       <th>Cliente/Descrição</th>
       <th>Ticket</th>
-      <th style="width: 120px;">Ações</th>
+      <th style="width: 200px;">Ações</th>
     </tr>
   </thead>
   <tbody>
@@ -46,9 +46,13 @@
       <td>{{ i.customer.nome_razao_social if i.customer else (i.descricao or '-') }}</td>
       <td>{{ i.ticket_ref or '-' }}</td>
       <td class="text-end">
-        <a href="{{ url_for('pdv.imprimir_recibo', mov_id=i.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
-          Reimprimir
-        </a>
+        <div class="d-flex gap-2 justify-content-end">
+            <a href="{{ url_for('pdv.imprimir_recibo', mov_id=i.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank">Recibo</a>
+            <a href="{{ url_for('pdv.edit_movement', mov_id=i.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+            <form method="post" action="{{ url_for('pdv.delete_movement', mov_id=i.id) }}" onsubmit="return confirm('Tem a certeza que deseja excluir esta movimentação?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+            </form>
+        </div>
       </td>
     </tr>
     {% else %}
@@ -59,7 +63,6 @@
   </tbody>
 </table>
 
-<!-- PAINEL DE TOTAIS ATUALIZADO -->
 <div class="card border-primary mt-4">
     <div class="card-header bg-primary text-white">
         <strong>Resumo dos Lançamentos Exibidos</strong>
