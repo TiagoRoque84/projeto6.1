@@ -7,35 +7,51 @@
 
 <div class="card mb-4">
   <div class="card-body">
-    <div class="row">
-        <div class="col-md-8">
+    <div class="row align-items-center">
+        <div class="col-md-6">
             <h5 class="card-title">Dados Gerais</h5>
             <p class="mb-1"><strong>Placa:</strong> <span class="badge bg-dark">{{ vehicle.placa }}</span> | <strong>RENAVAM:</strong> {{ vehicle.renavam or '-' }}</p>
             <p class="mb-1"><strong>Descrição:</strong> {{ vehicle.descricao or '-' }}</p>
             <p><strong>Vencimento do Licenciamento:</strong> {{ vehicle.venc_licenciamento.strftime('%d/%m/%Y') if vehicle.venc_licenciamento else '-' }}</p>
+            <p><strong>Intervalo de Troca de Óleo:</strong> {{ vehicle.oil_change_km_interval }} km</p>
         </div>
-        <div class="col-md-4 text-end">
-            <a href="{{ url_for('fleet.docs', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-outline-info">Documentos ({{ vehicle.documentos.count() }})</a>
-            <a href="{{ url_for('fleet.edit', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-outline-primary">Editar Dados</a>
-            {# --- BOTÃO DE EXCLUIR ADICIONADO AQUI --- #}
-            <form method="post" action="{{ url_for('fleet.delete', vehicle_id=vehicle.id) }}" onsubmit="return confirm('Tem certeza que deseja excluir este veículo e todos os seus registros?');" class="d-inline ms-1">
-                <button type="submit" class="btn btn-sm btn-outline-danger">Excluir Veículo</button>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-header p-2"><strong>KM Atual</strong></div>
+                <div class="card-body p-2">
+                    <h5 class="card-title mb-0">{{ vehicle.current_km or 0 }}</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <form action="{{ url_for('fleet.update_km', vehicle_id=vehicle.id) }}" method="post" class="d-flex gap-2">
+                {{ km_form.hidden_tag() }}
+                <div class="flex-grow-1">
+                    {{ km_form.current_km.label(class="form-label visually-hidden") }}
+                    {{ km_form.current_km(class="form-control", placeholder="Atualizar KM...") }}
+                </div>
+                {{ km_form.submit(class="btn btn-secondary") }}
             </form>
         </div>
+    </div>
+    <hr>
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{{ url_for('fleet.docs', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-outline-info">Documentos ({{ vehicle.documentos.count() }})</a>
+        <a href="{{ url_for('fleet.edit', vehicle_id=vehicle.id) }}" class="btn btn-sm btn-outline-primary">Editar Dados do Veículo</a>
     </div>
   </div>
 </div>
 
 <div class="card mb-4">
     <div class="card-header">
-        <strong>Registrar Nova Manutenção</strong>
+        <strong>Registar Nova Manutenção</strong>
     </div>
     <div class="card-body">
         <form method="post">
             {{ form.hidden_tag() }}
             <div class="row g-3">
                 <div class="col-md-4">{{ form.data.label }} {{ form.data(class="form-control") }}</div>
-                <div class="col-md-4">{{ form.km_atual.label }} {{ form.km_atual(class="form-control", type="number") }}</div>
+                <div class="col-md-4">{{ form.km_atual.label }} {{ form.km_atual(class="form-control", type="number", placeholder="KM no momento do serviço") }}</div>
                 <div class="col-md-4">{{ form.tipo_servico.label }} {{ form.tipo_servico(class="form-control", placeholder="Troca de Óleo, Pneus, Freios...") }}</div>
                 <div class="col-md-4">{{ form.local.label }} {{ form.local(class="form-control") }}</div>
                 <div class="col-md-4">{{ form.oleo_utilizado.label }} {{ form.oleo_utilizado(class="form-control") }}</div>
@@ -45,7 +61,7 @@
                         {{ form.trocou_filtro(class="form-check-input") }}
                         {{ form.trocou_filtro.label(class="form-check-label") }}
                     </div>
-                    {{ form.submit(class="btn btn-success") }}
+                    <button type="submit" name="submit_maintenance" class="btn btn-success">Salvar Manutenção</button>
                 </div>
             </div>
         </form>
@@ -71,7 +87,7 @@
                         <td>{{ log.responsavel }}</td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="8" class="text-center">Nenhum registro de troca de óleo.</td></tr>
+                    <tr><td colspan="8" class="text-center">Nenhum registo de troca de óleo.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -92,7 +108,7 @@
                         <td>{{ log.responsavel }}</td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="5" class="text-center">Nenhum outro tipo de manutenção registrada.</td></tr>
+                    <tr><td colspan="5" class="text-center">Nenhum outro tipo de manutenção registada.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

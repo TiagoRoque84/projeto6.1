@@ -264,8 +264,26 @@ class Vehicle(db.Model):
     renavam = db.Column(db.String(20), unique=True)
     venc_licenciamento = db.Column(db.Date)
     
+    current_km = db.Column(db.Integer, default=0)
+    oil_change_km_interval = db.Column(db.Integer, default=5000)
+
     manutencoes = db.relationship('MaintenanceLog', backref='vehicle', lazy='dynamic', order_by="desc(MaintenanceLog.data)", cascade="all, delete-orphan")
     documentos = db.relationship('VehicleDocument', backref='vehicle', lazy='dynamic', cascade="all, delete-orphan")
+
+    @property
+    def last_oil_change(self):
+        """
+        Retorna o último registo de manutenção que foi uma troca de óleo.
+        Esta função agora faz o filtro em Python para garantir a correspondência correta.
+        """
+        # A relação já está ordenada pela data mais recente por causa do `order_by` no `relationship`
+        all_logs = self.manutencoes.all()
+        for log in all_logs:
+            # Normaliza o texto (minúsculas, sem acento) para uma comparação robusta
+            tipo_servico_normalizado = log.tipo_servico.lower().replace('ó', 'o')
+            if 'oleo' in tipo_servico_normalizado:
+                return log # Retorna o primeiro que encontrar (que é o mais recente)
+        return None # Retorna None se nenhuma troca de óleo for encontrada
 
 class MaintenanceLog(db.Model):
     __tablename__ = 'maintenance_log'

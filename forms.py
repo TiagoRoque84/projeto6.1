@@ -175,10 +175,7 @@ class MovementForm(FlaskForm):
     material = StringField("Material Pesado")
     peso = FloatField("Peso (kg)", validators=[Optional()])
     pagamento = SelectField("Forma de pagamento", choices=[ ("DINHEIRO","Dinheiro"), ("PIX","Pix"), ("CARTAO","Cartão"), ("CONTA", "Na Conta (Fiado)") ], validators=[DataRequired()])
-    
-    # --- CORREÇÃO APLICADA AQUI ---
     descricao = StringField("Descrição/Motivo", validators=[Optional()])
-
     submit = SubmitField("Lançar e imprimir")
     submit_no_print = SubmitField("Apenas lançar")
 
@@ -210,7 +207,7 @@ class MaintenanceLogForm(FlaskForm):
     oleo_utilizado = StringField('Óleo/Peça Utilizada')
     responsavel = StringField('Responsável')
     trocou_filtro = BooleanField('Trocou Filtro de Óleo?')
-    submit = SubmitField('Salvar Manutenção')
+    submit = SubmitField('Salvar Manutenção', name='submit_maintenance')
 
 class VehicleForm(FlaskForm):
     nome = StringField('Nome do Veículo', validators=[DataRequired()])
@@ -218,7 +215,13 @@ class VehicleForm(FlaskForm):
     placa = StringField('Placa', validators=[DataRequired()])
     renavam = StringField('RENAVAM')
     venc_licenciamento = DateField('Vencimento do Licenciamento', validators=[Optional()])
+    current_km = IntegerField('Quilometragem Atual', validators=[Optional(), NumberRange(min=0)])
+    oil_change_km_interval = IntegerField('Intervalo de Troca de Óleo (KM)', default=5000, validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField('Salvar Veículo')
+
+class UpdateKmForm(FlaskForm):
+    current_km = IntegerField('Nova Quilometragem', validators=[DataRequired(), NumberRange(min=0)])
+    submit = SubmitField('Atualizar KM')
 
 class VehicleDocumentForm(FlaskForm):
     tipo = StringField("Tipo", validators=[DataRequired()])

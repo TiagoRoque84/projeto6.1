@@ -7,23 +7,31 @@
   <div class="row">
     <div class="col-md-6 mb-3">
       {{ form.nome.label(class="form-label") }}
-      {{ form.nome(class="form-control", placeholder="Ex: Caminhão Mercedes, Fiat Strada...") }}
+      {{ form.nome(class="form-control", placeholder="Ex: Camião Mercedes, Fiat Strada...") }}
     </div>
     <div class="col-md-6 mb-3">
       {{ form.descricao.label(class="form-label") }}
       {{ form.descricao(class="form-control", placeholder="Ex: Axor 2544, Endurance 1.4...") }}
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
       {{ form.placa.label(class="form-label") }}
       {{ form.placa(class="form-control") }}
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
       {{ form.renavam.label(class="form-label") }}
       {{ form.renavam(class="form-control") }}
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
       {{ form.venc_licenciamento.label(class="form-label") }}
       {{ form.venc_licenciamento(class="form-control") }}
+    </div>
+    <div class="col-md-3 mb-3">
+        {{ form.oil_change_km_interval.label(class="form-label") }}
+        {{ form.oil_change_km_interval(class="form-control", type="number") }}
+    </div>
+    <div class="col-md-3 mb-3">
+        {{ form.current_km.label(class="form-label") }}
+        {{ form.current_km(class="form-control", type="number", placeholder="KM inicial se souber") }}
     </div>
   </div>
   

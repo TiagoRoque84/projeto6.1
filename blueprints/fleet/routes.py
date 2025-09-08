@@ -4,7 +4,7 @@ from flask_login import login_required
 from sqlalchemy import func, or_
 from . import fleet_bp
 from models import db, Vehicle, MaintenanceLog, VehicleDocument
-from forms import VehicleForm, MaintenanceLogForm, VehicleDocumentForm
+from forms import VehicleForm, MaintenanceLogForm, VehicleDocumentForm, UpdateKmForm
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from utils import save_file 
@@ -15,26 +15,7 @@ from flask import current_app
 @login_required
 def list():
     vehicles = Vehicle.query.order_by(Vehicle.nome).all()
-    
-    # Prepara uma lista de dicionários com os dados prontos para a tabela
-    vehicle_list_data = []
-    for v in vehicles:
-        # Busca a última troca de óleo usando lógica Python para garantir
-        last_oil_change = None
-        # Garante que os logs estão ordenados pela data mais recente primeiro
-        all_logs_sorted = v.manutencoes.order_by(MaintenanceLog.data.desc()).all()
-        for log in all_logs_sorted:
-            # Normaliza o texto para minúsculas e sem acento para a comparação
-            if 'oleo' in log.tipo_servico.lower().replace('ó', 'o'):
-                last_oil_change = log
-                break # Encontrou o mais recente, pode parar o loop
-
-        vehicle_list_data.append({
-            'vehicle': v,
-            'last_oil_change': last_oil_change
-        })
-
-    return render_template('fleet/list.html', items=vehicle_list_data)
+    return render_template('fleet/list.html', items=vehicles)
 
 @fleet_bp.route('/novo', methods=['GET', 'POST'])
 @login_required
@@ -65,17 +46,21 @@ def edit(vehicle_id):
 @login_required
 def details(vehicle_id):
     vehicle = Vehicle.query.get_or_404(vehicle_id)
-    form = MaintenanceLogForm()
+    maintenance_form = MaintenanceLogForm()
+    km_form = UpdateKmForm(obj=vehicle)
     
-    if form.validate_on_submit():
+    if maintenance_form.validate_on_submit() and 'submit_maintenance' in request.form:
         new_log = MaintenanceLog(vehicle_id=vehicle.id)
-        form.populate_obj(new_log)
+        maintenance_form.populate_obj(new_log)
         
         if 'oleo' in new_log.tipo_servico.lower().replace('ó', 'o'):
             if new_log.km_atual:
-                new_log.km_proxima_troca = new_log.km_atual + 5000
+                new_log.km_proxima_troca = new_log.km_atual + vehicle.oil_change_km_interval
             if new_log.data:
                 new_log.data_proxima_troca = new_log.data + relativedelta(months=6)
+        
+        if new_log.km_atual and new_log.km_atual > (vehicle.current_km or 0):
+            vehicle.current_km = new_log.km_atual
 
         db.session.add(new_log)
         db.session.commit()
@@ -86,17 +71,30 @@ def details(vehicle_id):
     oil_changes = []
     other_maintenances = []
     for log in all_logs:
-        tipo_servico_normalizado = log.tipo_servico.lower().replace('ó', 'o')
-        if 'oleo' in tipo_servico_normalizado:
+        if 'oleo' in log.tipo_servico.lower().replace('ó', 'o'):
             oil_changes.append(log)
         else:
             other_maintenances.append(log)
     
     return render_template('fleet/details.html', 
                            vehicle=vehicle, 
-                           form=form,
+                           form=maintenance_form,
+                           km_form=km_form,
                            oil_changes=oil_changes,
                            other_maintenances=other_maintenances)
+
+@fleet_bp.route('/<int:vehicle_id>/update_km', methods=['POST'])
+@login_required
+def update_km(vehicle_id):
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    km_form = UpdateKmForm()
+    if km_form.validate_on_submit():
+        vehicle.current_km = km_form.current_km.data
+        db.session.commit()
+        flash(f'Quilometragem de {vehicle.nome} atualizada para {vehicle.current_km} km.', 'success')
+    else:
+        flash('Erro na validação do formulário de quilometragem.', 'danger')
+    return redirect(url_for('fleet.details', vehicle_id=vehicle.id))
 
 @fleet_bp.route('/<int:vehicle_id>/docs', methods=["GET", "POST"])
 @login_required
@@ -122,7 +120,6 @@ def docs(vehicle_id):
 
     documents = vehicle.documentos.order_by(VehicleDocument.uploaded_at.desc()).all()
     return render_template('fleet/docs.html', vehicle=vehicle, form=form, documents=documents)
-
 
 @fleet_bp.route('/docs/<int:doc_id>/delete', methods=['POST'])
 @login_required

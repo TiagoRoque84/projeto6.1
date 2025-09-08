@@ -16,17 +16,18 @@
     </tr>
   </thead>
   <tbody>
-    {% for item in items %}
+    {% for v in items %}
+    {% set ultima_troca_oleo = v.last_oil_change %}
     <tr>
-      <td><b>{{ item.vehicle.nome }}</b><br><small class="text-muted">{{ item.vehicle.descricao }}</small></td>
-      <td><span class="badge bg-secondary">{{ item.vehicle.placa }}</span></td>
-      <td>{{ item.vehicle.venc_licenciamento.strftime('%d/%m/%Y') if item.vehicle.venc_licenciamento else '-' }}</td>
-      <td>{{ item.last_oil_change.km_atual if item.last_oil_change else 'N/A' }}</td>
-      <td>{{ item.last_oil_change.km_proxima_troca if item.last_oil_change else 'N/A' }}</td>
+      <td><b>{{ v.nome }}</b><br><small class="text-muted">{{ v.descricao }}</small></td>
+      <td><span class="badge bg-secondary">{{ v.placa }}</span></td>
+      <td>{{ v.venc_licenciamento.strftime('%d/%m/%Y') if v.venc_licenciamento else '-' }}</td>
+      <td>{{ ultima_troca_oleo.km_atual if ultima_troca_oleo else 'N/A' }}</td>
+      <td>{{ ultima_troca_oleo.km_proxima_troca if ultima_troca_oleo else 'N/A' }}</td>
       <td class="text-end">
         <div class="d-flex gap-2 justify-content-end">
-            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('fleet.details', vehicle_id=item.vehicle.id) }}">Ver Ficha</a>
-            <form method="post" action="{{ url_for('fleet.delete', vehicle_id=item.vehicle.id) }}" onsubmit="return confirm('Tem a certeza que deseja excluir este veículo? A ação não pode ser desfeita.');">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('fleet.details', vehicle_id=v.id) }}">Ver Ficha</a>
+            <form method="post" action="{{ url_for('fleet.delete', vehicle_id=v.id) }}" onsubmit="return confirm('Tem a certeza que deseja excluir este veículo? A ação não pode ser desfeita.');">
                 <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
             </form>
         </div>
