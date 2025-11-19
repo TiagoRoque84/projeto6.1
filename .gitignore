@@ -1,9 +1,26 @@
-.venv/
+# Ambientes virtuais (as pastas pesadas)
 venv/
+.venv/
+env/
+
+# Bytecode do Python (lixo)
 __pycache__/
-*.pyc
-instance/
+*.py[cod]
+
+# Arquivos de ambiente e senhas (SEGURANÇA!)
 .env
-*.sqlite3
-.idea/
+.env.local
+senha.txt
+instance/
+
+# Arquivos de sistema e IDE
 .vscode/
+.idea/
+*.log
+
+# Arquivos zipados de backup
+*.zip
+*.rar
+
+# Uploads de usuários (opcional, mas recomendado)
+uploads/

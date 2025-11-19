@@ -1,1 +1,0 @@
-user = User(username='admin', password=generate_password_hash('admin', method='pbkdf2:sha256'))
