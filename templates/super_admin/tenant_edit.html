@@ -1,0 +1,118 @@
+{% extends "super_admin/base.html" %}
+
+{% block title %}Editar Tenant - Super Admin{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 30px;">✏️ Editar Tenant: {{ tenant.company_name }}</h1>
+
+<div class="card">
+    <form method="POST">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <h3 style="margin-bottom: 15px; color: #667eea;">Informações Básicas</h3>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Subdomínio</label>
+                    <input type="text" value="{{ tenant.subdomain }}" disabled
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px; background: #f5f5f5;">
+                    <small style="color: #666;">O subdomínio não pode ser alterado</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="company_name">Nome da Empresa *</label>
+                    <input type="text" id="company_name" name="company_name" required value="{{ tenant.company_name }}"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="contact_name">Nome do Responsável *</label>
+                    <input type="text" id="contact_name" name="contact_name" required value="{{ tenant.contact_name }}"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 15px; color: #667eea;">Contato e Plano</h3>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="contact_email">E-mail *</label>
+                    <input type="email" id="contact_email" name="contact_email" required
+                        value="{{ tenant.contact_email }}"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="contact_phone">Telefone</label>
+                    <input type="text" id="contact_phone" name="contact_phone" value="{{ tenant.contact_phone or '' }}"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="plan_type">Plano *</label>
+                    <select id="plan_type" name="plan_type" required
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                        {% for plan_key, plan in plans.items() %}
+                        <option value="{{ plan_key }}" {% if tenant.subscription and
+                            tenant.subscription.plan_type==plan_key %}selected{% endif %}>
+                            {{ plan.name }} - R$ {{ "%.2f"|format(plan.price) }}/mês
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small style="color: #666;">Alterar o plano atualiza automaticamente os limites e features</small>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <button type="submit" class="btn btn-success" style="margin-right: 10px;">
+                ✓ Salvar Alterações
+            </button>
+            <a href="{{ url_for('super_admin.tenant_detail', tenant_id=tenant.id) }}" class="btn"
+                style="background: #ccc; color: #333;">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="margin-top: 20px; background: #f9f9f9;">
+    <h3 style="margin-bottom: 15px;">📊 Informações do Plano Selecionado</h3>
+    <div id="plan-info">
+        {% if tenant.subscription %}
+        {% set current_plan = plans[tenant.subscription.plan_type] %}
+        <ul style="list-style: none; font-size: 14px; color: #666;">
+            <li>✓ {{ current_plan.max_companies }} empresa{% if current_plan.max_companies > 1 %}s{% endif %}</li>
+            <li>✓ {{ current_plan.max_users }} usuário{% if current_plan.max_users > 1 %}s{% endif %}</li>
+            <li>✓ {{ current_plan.max_employees }} funcionário{% if current_plan.max_employees > 1 %}s{% endif %}</li>
+            <li>✓ {{ current_plan.storage_gb }}GB armazenamento</li>
+            <li style="margin-top: 10px; font-weight: 600; color: #333;">Módulos:</li>
+            {% for feature in current_plan.features %}
+            <li style="margin-left: 15px;">• {{ feature }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Atualizar informações do plano quando mudar o select
+    document.getElementById('plan_type').addEventListener('change', function () {
+        const plans = {{ plans| tojson
+    }};
+    const selectedPlan = plans[this.value];
+
+    let html = '<ul style="list-style: none; font-size: 14px; color: #666;">';
+    html += `<li>✓ ${selectedPlan.max_companies} empresa${selectedPlan.max_companies > 1 ? 's' : ''}</li>`;
+    html += `<li>✓ ${selectedPlan.max_users} usuário${selectedPlan.max_users > 1 ? 's' : ''}</li>`;
+    html += `<li>✓ ${selectedPlan.max_employees} funcionário${selectedPlan.max_employees > 1 ? 's' : ''}</li>`;
+    html += `<li>✓ ${selectedPlan.storage_gb}GB armazenamento</li>`;
+    html += '<li style="margin-top: 10px; font-weight: 600; color: #333;">Módulos:</li>';
+    selectedPlan.features.forEach(feature => {
+        html += `<li style="margin-left: 15px;">• ${feature}</li>`;
+    });
+    html += '</ul>';
+
+    document.getElementById('plan-info').innerHTML = html;
+});
+</script>
+{% endblock %}

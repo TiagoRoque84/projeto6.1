@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo Não Disponível</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .feature-name {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .plan-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: #e0e0e0;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-block;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="icon">🔒</div>
+        <h1>Módulo Não Disponível</h1>
+        <p>
+            O módulo <span class="feature-name">{{ feature_name }}</span> não está disponível no seu plano atual.
+        </p>
+        <div class="plan-badge">
+            Plano Atual: {{ current_plan }}
+        </div>
+        <div>
+            <a href="#" class="btn">📈 Ver Planos e Fazer Upgrade</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">← Voltar</a>
+        </div>
+    </div>
+</body>
+
+</html>

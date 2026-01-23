@@ -1,6 +1,6 @@
 @echo off
 REM --- MUDE A LINHA ABAIXO PARA A PASTA DO SEU PROJETO ---
-cd /d "C:\Users\Master\Desktop\projeto6-main"
+cd /d "%~dp0"
 
 REM --- INICIA O SERVIDOR E SOBRESCREVE O ARQUIVO DE LOG ---
 echo Iniciando servidor em %DATE% %TIME% > server_log.txt

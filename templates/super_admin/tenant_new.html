@@ -1,0 +1,114 @@
+{% extends "super_admin/base.html" %}
+
+{% block title %}Criar Novo Tenant - Super Admin{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 30px;">➕ Criar Novo Tenant</h1>
+
+<div class="card">
+    <form method="POST">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <h3 style="margin-bottom: 15px; color: #667eea;">Informações Básicas</h3>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="subdomain">Subdomínio *</label>
+                    <input type="text" id="subdomain" name="subdomain" required pattern="[a-z0-9-]+"
+                        title="Apenas letras minúsculas, números e hífens" placeholder="cliente1"
+                        value="{{ data.subdomain if data else '' }}"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                    <small style="color: #666;">Exemplo: cliente1.local (local) ou cliente1.seudominio.com
+                        (produção)</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="company_name">Nome da Empresa *</label>
+                    <input type="text" id="company_name" name="company_name" required placeholder="Empresa LTDA"
+                        value="{{ data.company_name if data else '' }}"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="contact_name">Nome do Responsável *</label>
+                    <input type="text" id="contact_name" name="contact_name" required placeholder="João Silva"
+                        value="{{ data.contact_name if data else '' }}"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 15px; color: #667eea;">Contato e Plano</h3>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="contact_email">E-mail *</label>
+                    <input type="email" id="contact_email" name="contact_email" required
+                        placeholder="contato@empresa.com" value="{{ data.contact_email if data else '' }}"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="contact_phone">Telefone</label>
+                    <input type="text" id="contact_phone" name="contact_phone" placeholder="(16) 99999-9999"
+                        value="{{ data.contact_phone if data else '' }}"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="plan_type">Plano *</label>
+                    <select id="plan_type" name="plan_type" required
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                        {% for plan_key, plan in plans.items() %}
+                        <option value="{{ plan_key }}" {% if data and data.plan_type==plan_key %}selected{% endif %}>
+                            {{ plan.name }} - R$ {{ "%.2f"|format(plan.price) }}/mês
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="trial_days">Dias de Trial</label>
+                    <input type="number" id="trial_days" name="trial_days" value="14" min="0" max="90"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>
+                        <input type="checkbox" name="send_email" checked>
+                        Enviar email de boas-vindas (quando configurado)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+            <button type="submit" class="btn btn-success" style="margin-right: 10px;">
+                ✓ Criar Tenant
+            </button>
+            <a href="{{ url_for('super_admin.tenants_list') }}" class="btn" style="background: #ccc; color: #333;">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="margin-top: 20px; background: #f9f9f9;">
+    <h3 style="margin-bottom: 15px;">ℹ️ Informações sobre Planos</h3>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+        {% for plan_key, plan in plans.items() %}
+        <div style="background: white; padding: 15px; border-radius: 5px; border: 2px solid #e0e0e0;">
+            <h4 style="color: #667eea; margin-bottom: 10px;">{{ plan.name }}</h4>
+            <p style="font-size: 24px; font-weight: bold; margin-bottom: 10px;">R$ {{ "%.2f"|format(plan.price) }}</p>
+            <ul style="list-style: none; font-size: 13px; color: #666;">
+                <li>✓ {{ plan.max_companies }} empresa{% if plan.max_companies > 1 %}s{% endif %}</li>
+                <li>✓ {{ plan.max_users }} usuário{% if plan.max_users > 1 %}s{% endif %}</li>
+                <li>✓ {{ plan.storage_gb }}GB armazenamento</li>
+                <li style="margin-top: 5px; font-weight: 600; color: #333;">Módulos:</li>
+                {% for feature in plan.features %}
+                <li style="font-size: 12px;">• {{ feature }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

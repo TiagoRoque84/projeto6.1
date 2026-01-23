@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% block content %}
 <h3>{{ title }}</h3>
@@ -20,18 +19,55 @@
   <div class="row">
     <div class="col-md-3 mb-3">
       <label class="form-label">Perfil</label>
-      <select class="form-select" name="role">
+      <select class="form-select" name="role" id="role" onchange="togglePermissions()">
         <option value="user" {{ 'selected' if item and item.role=='user' else '' }}>Usuário</option>
         <option value="admin" {{ 'selected' if item and item.role=='admin' else '' }}>Admin</option>
       </select>
     </div>
     <div class="col-md-3 mb-3 d-flex align-items-end">
       <div class="form-check">
-        <input class="form-check-input" type="checkbox" name="active" id="active" {{ 'checked' if (not item or item.active) else '' }}>
+        <input class="form-check-input" type="checkbox" name="active" id="active" {{ 'checked' if (not item or
+          item.active) else '' }}>
         <label class="form-check-label" for="active">Ativo</label>
       </div>
     </div>
   </div>
-  <button class="btn btn-primary">Salvar</button>
+
+  <!-- Permissões -->
+  <div id="permissions-section" style="{{ 'display:none;' if not item or item.role == 'admin' else '' }}">
+    <hr>
+    <h5>Permissões do Usuário</h5>
+    <p class="text-muted small">Selecione o que este usuário pode fazer no sistema. Administradores têm todas as
+      permissões automaticamente.</p>
+
+    <div class="row">
+      {% for perm_code, perm_name in permissions.items() %}
+      <div class="col-md-6 col-lg-4 mb-2">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="perm_{{ perm_code }}" id="perm_{{ perm_code }}"
+            {{ 'checked' if user_permissions.get(perm_code, False) else '' }}>
+          <label class="form-check-label" for="perm_{{ perm_code }}">
+            {{ perm_name }}
+          </label>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <button class="btn btn-primary mt-3">Salvar</button>
 </form>
+
+<script>
+  function togglePermissions() {
+    const role = document.getElementById('role').value;
+    const permissionsSection = document.getElementById('permissions-section');
+
+    if (role === 'admin') {
+      permissionsSection.style.display = 'none';
+    } else {
+      permissionsSection.style.display = 'block';
+    }
+  }
+</script>
 {% endblock %}

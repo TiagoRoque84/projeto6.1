@@ -1,0 +1,334 @@
+{% extends 'super_admin/base.html' %}
+{% block title %}Lançamentos Financeiros{% endblock %}
+{% block content %}
+<style>
+    .transactions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .transactions-header h1 {
+        font-size: 32px;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .summary-card {
+        padding: 25px;
+        border-radius: 12px;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-card.receita-paga {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    }
+
+    .summary-card.despesa-paga {
+        background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+    }
+
+    .summary-card.a-receber {
+        background: white;
+        border: 3px solid #48bb78;
+        color: #2d3748;
+    }
+
+    .summary-card.a-pagar {
+        background: white;
+        border: 3px solid #e53e3e;
+        color: #2d3748;
+    }
+
+    .summary-label {
+        font-size: 13px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+    }
+
+    .summary-value {
+        font-size: 26px;
+        font-weight: bold;
+    }
+
+    .filter-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #4a5568;
+        margin-right: 8px;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 13px;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+
+    .filter-btn.active {
+        background: #667eea;
+        color: white;
+    }
+
+    .filter-btn:not(.active) {
+        background: #f7fafc;
+        color: #4a5568;
+        border-color: #e2e8f0;
+    }
+
+    .filter-btn:hover:not(.active) {
+        background: #edf2f7;
+    }
+
+    .transactions-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .transactions-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .transactions-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .transactions-table th {
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .transactions-table td {
+        padding: 16px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .transactions-table tr:hover {
+        background: #f7fafc;
+    }
+
+    .transaction-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .transaction-type.receita {
+        background: #c6f6d5;
+        color: #22543d;
+    }
+
+    .transaction-type.despesa {
+        background: #fed7d7;
+        color: #742a2a;
+    }
+
+    .transaction-amount {
+        font-size: 16px;
+        font-weight: 700;
+        color: #2d3748;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+    }
+
+    .action-buttons button {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: #a0aec0;
+    }
+
+    .empty-icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+</style>
+
+<div style="max-width: 1600px; margin: 0 auto;">
+    <div class="transactions-header">
+        <h1>💸 Lançamentos Financeiros</h1>
+        <a href="{{ url_for('super_admin.financial_transaction_new') }}" class="btn-primary"
+            style="padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <span>➕</span>
+            <span>Novo Lançamento</span>
+        </a>
+    </div>
+
+    <!-- Resumo -->
+    <div class="summary-cards">
+        <div class="summary-card receita-paga">
+            <div class="summary-label">💰 Receitas Recebidas</div>
+            <div class="summary-value">
+                R$ {{ "{:,.2f}".format(receitas_pagas).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+            </div>
+        </div>
+
+        <div class="summary-card despesa-paga">
+            <div class="summary-label">📤 Despesas Pagas</div>
+            <div class="summary-value">
+                R$ {{ "{:,.2f}".format(despesas_pagas).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+            </div>
+        </div>
+
+        <div class="summary-card a-receber">
+            <div class="summary-label" style="color: #48bb78;">💵 A Receber</div>
+            <div class="summary-value" style="color: #48bb78;">
+                R$ {{ "{:,.2f}".format(receitas_pendentes).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+            </div>
+        </div>
+
+        <div class="summary-card a-pagar">
+            <div class="summary-label" style="color: #e53e3e;">📋 A Pagar</div>
+            <div class="summary-value" style="color: #e53e3e;">
+                R$ {{ "{:,.2f}".format(despesas_pendentes).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-bar">
+        <span class="filter-label">Tipo:</span>
+        <a href="{{ url_for('super_admin.financial_transactions', type='all', status=status_filter) }}"
+            class="filter-btn {% if type_filter == 'all' %}active{% endif %}">Todos</a>
+        <a href="{{ url_for('super_admin.financial_transactions', type='receita', status=status_filter) }}"
+            class="filter-btn {% if type_filter == 'receita' %}active{% endif %}">💰 Receitas</a>
+        <a href="{{ url_for('super_admin.financial_transactions', type='despesa', status=status_filter) }}"
+            class="filter-btn {% if type_filter == 'despesa' %}active{% endif %}">📤 Despesas</a>
+
+        <span style="margin: 0 8px; color: #cbd5e0;">|</span>
+
+        <span class="filter-label">Status:</span>
+        <a href="{{ url_for('super_admin.financial_transactions', type=type_filter, status='all') }}"
+            class="filter-btn {% if status_filter == 'all' %}active{% endif %}">Todos</a>
+        <a href="{{ url_for('super_admin.financial_transactions', type=type_filter, status='pending') }}"
+            class="filter-btn {% if status_filter == 'pending' %}active{% endif %}">⏳ Pendentes</a>
+        <a href="{{ url_for('super_admin.financial_transactions', type=type_filter, status='paid') }}"
+            class="filter-btn {% if status_filter == 'paid' %}active{% endif %}">✓ Pagos</a>
+    </div>
+
+    <!-- Lista -->
+    {% if transactions %}
+    <div class="transactions-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th>Vencimento</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                    <th style="width: 150px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td>
+                        <span class="transaction-type {{ t.type }}">
+                            {% if t.type == 'receita' %}💰 Receita{% else %}📤 Despesa{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <strong style="color: #2d3748;">{{ t.description }}</strong>
+                    </td>
+                    <td>
+                        {% if t.category %}
+                        <span>{{ t.category.icon }} {{ t.category.name }}</span>
+                        {% else %}
+                        <span style="color: #a0aec0;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ t.due_date.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <span class="transaction-amount">{{ t.formatted_amount }}</span>
+                    </td>
+                    <td>
+                        {% if t.status == 'paid' %}
+                        <span class="badge badge-success">✓ Pago</span>
+                        {% elif t.is_overdue %}
+                        <span class="badge badge-danger">⚠ Vencido</span>
+                        {% else %}
+                        <span class="badge badge-warning">⏳ Pendente</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if t.status == 'pending' %}
+                            <form method="POST"
+                                action="{{ url_for('super_admin.financial_transaction_pay', transaction_id=t.id) }}"
+                                style="display: inline;">
+                                <button class="btn btn-sm btn-success">✓ Pagar</button>
+                            </form>
+                            {% endif %}
+                            <form method="POST"
+                                action="{{ url_for('super_admin.financial_transaction_delete', transaction_id=t.id) }}"
+                                style="display: inline;" onsubmit="return confirm('Excluir este lançamento?')">
+                                <button class="btn btn-sm btn-danger">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="transactions-table">
+        <div class="empty-state">
+            <div class="empty-icon">💸</div>
+            <h3 style="color: #4a5568; margin-bottom: 10px;">Nenhum lançamento encontrado</h3>
+            <p>Comece criando seu primeiro lançamento financeiro</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

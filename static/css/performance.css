@@ -1,0 +1,193 @@
+/* static/css/performance.css */
+/* Otimizações de Performance e UX */
+
+/* ============================================
+   PERFORMANCE
+   ============================================ */
+
+/* Hardware acceleration para animações */
+.btn,
+.card,
+.category-card,
+.account-card,
+.stat-card {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* Otimizar scroll */
+* {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Evitar layout shifts */
+img,
+video {
+    width: 100%;
+    height: auto;
+}
+
+/* ============================================
+   LOADING STATES
+   ============================================ */
+
+/* Loading spinner */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 3px solid #667eea;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spinner 0.6s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+   SMOOTH INTERACTIONS
+   ============================================ */
+
+/* Feedback visual ao clicar */
+.btn:active,
+button:active {
+    transform: scale(0.98);
+}
+
+/* Hover suave em cards */
+.card:hover,
+.category-card:hover,
+.account-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Focus visível para acessibilidade */
+*:focus {
+    outline: 3px solid #667eea;
+    outline-offset: 2px;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* ============================================
+   TIPOGRAFIA FLUIDA
+   ============================================ */
+
+/* Responsividade na tipografia */
+h1 {
+    font-size: clamp(24px, 5vw, 36px);
+}
+
+h2 {
+    font-size: clamp(20px, 4vw, 28px);
+}
+
+h3 {
+    font-size: clamp(18px, 3vw, 24px);
+}
+
+p {
+    font-size: clamp(14px, 2vw, 16px);
+}
+
+/* ============================================
+   ESPAÇAMENTO FLUIDO
+   ============================================ */
+
+/* Margens e paddings responsivos */
+.container {
+    padding: clamp(15px, 3vw, 30px);
+}
+
+.card {
+    padding: clamp(20px, 4vw, 35px);
+}
+
+/* ============================================
+   ACESSIBILIDADE
+   ============================================ */
+
+/* Modo escuro (se preferência do sistema) */
+@media (prefers-color-scheme: dark) {
+    /* Implementar modo escuro futuramente */
+}
+
+/* Reduzir animações se usuário preferir */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+
+/* Scroll suave para containers */
+.scroll-smooth {
+    scroll-behavior: smooth;
+}
+
+/* Ocultar scrollbar mas manter funcionalidade */
+.scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Texto truncado */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============================================
+   GRID SYSTEM FLUIDO
+   ============================================ */
+
+/* Grid responsivo universal */
+.responsive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    gap: clamp(15px, 3vw, 30px);
+}
+
+/* ============================================
+   SAFE AREAS (para notch em celulares)
+   ============================================ */
+
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(0px, env(safe-area-inset-left));
+        padding-right: max(0px, env(safe-area-inset-right));
+    }
+}

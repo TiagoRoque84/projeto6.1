@@ -6,15 +6,25 @@ import requests
 
 # --- FUNÇÃO DE E-MAIL ATUALIZADA PARA ACEITAR ANEXOS ---
 def send_email(to_list, subject, body, attachment_path=None, attachment_filename=None):
-    host = os.getenv("SMTP_HOST")
-    if not host: 
-        print("ERRO: SMTP_HOST não configurado no .env")
-        return False, "SMTP_HOST não configurado"
+    # Atualizado para usar MAIL_SERVER ao invés de SMTP_HOST
+    host = os.getenv("MAIL_SERVER")
+    if not host:
+        print("⚠️  AVISO: E-mail não configurado (MAIL_SERVER vazio no .env)")
+        print("📧 Configuração necessária:")
+        print("   MAIL_SERVER=smtp.gmail.com")
+        print("   MAIL_PORT=587")
+        print("   MAIL_USERNAME=seu_email@gmail.com")
+        print("   MAIL_PASSWORD=sua_senha_app")
+        return False, "E-mail não configurado"
     
-    port = int(os.getenv("SMTP_PORT","587"))
-    user = os.getenv("SMTP_USER")
-    pwd  = os.getenv("SMTP_PASS")
-    from_addr = os.getenv("SMTP_FROM", user)
+    port = int(os.getenv("MAIL_PORT","587"))
+    user = os.getenv("MAIL_USERNAME")
+    pwd  = os.getenv("MAIL_PASSWORD")
+    from_addr = os.getenv("MAIL_DEFAULT_SENDER", user)
+    
+    if not user or not pwd:
+        print("⚠️  AVISO: Credenciais de e-mail não configuradas")
+        return False, "Credenciais não configuradas"
     
     msg = EmailMessage()
     msg["Subject"] = subject
@@ -37,9 +47,10 @@ def send_email(to_list, subject, body, attachment_path=None, attachment_filename
             s.starttls()
             if user: s.login(user, pwd)
             s.send_message(msg)
+        print(f"✅ E-mail enviado com sucesso para: {', '.join(to_list)}")
         return True, "E-mail enviado com sucesso."
     except Exception as e:
-        print(f"ERRO ao enviar e-mail: {e}")
+        print(f"❌ ERRO ao enviar e-mail: {e}")
         return False, f"Falha no envio: {e}"
 
 # --- FUNÇÃO DE WHATSAPP (SEM ALTERAÇÃO) ---

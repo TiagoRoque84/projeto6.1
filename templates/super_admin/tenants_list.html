@@ -1,0 +1,103 @@
+{% extends "super_admin/base.html" %}
+
+{% block title %}Lista de Tenants - Super Admin{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1>👥 Gerenciar Tenants</h1>
+    <a href="{{ url_for('super_admin.tenant_new') }}" class="btn btn-success">➕ Novo Tenant</a>
+</div>
+
+<div class="card" style="margin-bottom: 20px;">
+    <form method="GET" style="display: flex; gap: 15px; align-items: end;">
+        <div style="flex: 1;">
+            <label for="search">Buscar</label>
+            <input type="text" id="search" name="search" placeholder="Nome, subdomínio ou email..." value="{{ search }}"
+                style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+        </div>
+
+        <div style="width: 200px;">
+            <label for="status">Status</label>
+            <select id="status" name="status"
+                style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                <option value="all" {% if status_filter=='all' %}selected{% endif %}>Todos</option>
+                <option value="active" {% if status_filter=='active' %}selected{% endif %}>Ativos</option>
+                <option value="trial" {% if status_filter=='trial' %}selected{% endif %}>Em Trial</option>
+                <option value="inactive" {% if status_filter=='inactive' %}selected{% endif %}>Inativos</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">🔍 Filtrar</button>
+    </form>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Subdomínio</th>
+                <th>Empresa</th>
+                <th>Email</th>
+                <th>Plano</th>
+                <th>Status</th>
+                <th>Criado em</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tenant in tenants %}
+            <tr>
+                <td><strong>{{ tenant.subdomain }}</strong></td>
+                <td>{{ tenant.company_name }}</td>
+                <td>{{ tenant.contact_email }}</td>
+                <td>
+                    {% if tenant.subscription %}
+                    {{ tenant.subscription.plan_type }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if tenant.is_active %}
+                    {% if tenant.is_trial %}
+                    <span class="badge badge-warning">Trial ({{ tenant.trial_days_remaining }}d)</span>
+                    {% else %}
+                    <span class="badge badge-success">Ativo</span>
+                    {% endif %}
+                    {% else %}
+                    <span class="badge badge-danger">Inativo</span>
+                    {% endif %}
+                </td>
+                <td>{{ tenant.created_at.strftime('%d/%m/%Y') if tenant.created_at else '-' }}</td>
+                <td>
+                    <a href="{{ url_for('super_admin.tenant_detail', tenant_id=tenant.id) }}" class="btn btn-primary"
+                        style="font-size: 12px; padding: 6px 12px;">Ver</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 30px; color: #999;">
+                    Nenhum tenant encontrado.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if pagination.pages > 1 %}
+    <div style="margin-top: 20px; text-align: center;">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('super_admin.tenants_list', page=pagination.prev_num, status=status_filter, search=search) }}"
+            class="btn" style="background: #ccc; color: #333;">← Anterior</a>
+        {% endif %}
+
+        <span style="margin: 0 15px;">Página {{ pagination.page }} de {{ pagination.pages }}</span>
+
+        {% if pagination.has_next %}
+        <a href="{{ url_for('super_admin.tenants_list', page=pagination.next_num, status=status_filter, search=search) }}"
+            class="btn" style="background: #ccc; color: #333;">Próxima →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

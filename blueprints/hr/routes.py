@@ -12,12 +12,14 @@ from forms import EmployeeForm, FuncaoForm, EmployeeDocForm
 from utils import save_file
 from pdf_reports import employee_pdf
 import requests
+from decorators import requires_feature
 
 hr_bp = Blueprint("rh", __name__)
 
 # ... (outras rotas como employees, employees_new, etc., continuam iguais) ...
 @hr_bp.route("/colaboradores")
 @login_required
+@requires_feature('hr')
 def employees():
     q = request.args.get("q", "").strip()
     ativo = request.args.get("ativo", "")
@@ -49,6 +51,7 @@ def _apply_employee_form(e: Employee, form: EmployeeForm):
 
 @hr_bp.route("/colaboradores/novo", methods=["GET", "POST"])
 @login_required
+@requires_feature('hr')
 def employees_new():
     form = EmployeeForm()
     form.company_id.choices = [(0, "-")] + [(c.id, c.razao_social) for c in Company.query.order_by(Company.razao_social)]
@@ -65,6 +68,7 @@ def employees_new():
 
 @hr_bp.route("/colaboradores/<int:emp_id>/edit", methods=["GET", "POST"])
 @login_required
+@requires_feature('hr')
 def employees_edit(emp_id):
     e = Employee.query.get_or_404(emp_id)
     form = EmployeeForm(obj=e)
@@ -82,6 +86,7 @@ def employees_edit(emp_id):
 
 @hr_bp.route("/colaboradores/<int:emp_id>/delete", methods=["POST"])
 @login_required
+@requires_feature('hr')
 def employees_delete(emp_id):
     e = Employee.query.get_or_404(emp_id)
     db.session.delete(e); db.session.commit()
@@ -90,6 +95,7 @@ def employees_delete(emp_id):
 
 @hr_bp.route("/colaboradores/<int:emp_id>/pdf")
 @login_required
+@requires_feature('hr')
 def employees_pdf(emp_id):
     e = Employee.query.get_or_404(emp_id)
     bio = io.BytesIO()
@@ -99,6 +105,7 @@ def employees_pdf(emp_id):
 
 @hr_bp.route("/colaboradores/<int:emp_id>/docs", methods=["GET", "POST"])
 @login_required
+@requires_feature('hr')
 def employee_docs(emp_id):
     emp = Employee.query.get_or_404(emp_id)
     form = EmployeeDocForm()
@@ -117,6 +124,7 @@ def employee_docs(emp_id):
 # --- INÍCIO: NOVA ROTA PARA EXCLUIR DOCUMENTO DO FUNCIONÁRIO ---
 @hr_bp.route("/colaboradores/docs/<int:doc_id>/delete", methods=['POST'])
 @login_required
+@requires_feature('hr')
 def employee_docs_delete(doc_id):
     doc = EmployeeDocument.query.get_or_404(doc_id)
     employee_id = doc.employee_id # Guarda o ID para redirecionar de volta
@@ -149,6 +157,7 @@ def api_cep(cep):
 
 @hr_bp.route("/funcoes", methods=["GET", "POST"])
 @login_required
+@requires_feature('hr')
 def funcoes():
     form = FuncaoForm()
     itens = Funcao.query.order_by(Funcao.nome).all()
@@ -161,6 +170,7 @@ def funcoes():
 
 @hr_bp.route("/funcoes/<int:funcao_id>/edit", methods=["GET", "POST"])
 @login_required
+@requires_feature('hr')
 def funcoes_edit(funcao_id):
     f = Funcao.query.get_or_404(funcao_id)
     form = FuncaoForm(obj=f)
@@ -174,6 +184,7 @@ def funcoes_edit(funcao_id):
 
 @hr_bp.route("/funcoes/<int:funcao_id>/delete", methods=["POST"])
 @login_required
+@requires_feature('hr')
 def funcoes_delete(funcao_id):
     f = Funcao.query.get_or_404(funcao_id)
     db.session.delete(f); db.session.commit()

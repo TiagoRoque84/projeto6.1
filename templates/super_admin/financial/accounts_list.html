@@ -1,0 +1,235 @@
+{% extends 'super_admin/base.html' %}
+
+{% block title %}Contas Bancárias - Super Admin{% endblock %}
+
+{% block content %}
+<style>
+    .accounts-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .accounts-header h1 {
+        font-size: 32px;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .total-balance-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .total-balance-label {
+        font-size: 14px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+    }
+
+    .total-balance-value {
+        font-size: 42px;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .accounts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 20px;
+    }
+
+    .account-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+    }
+
+    .account-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .account-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .account-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .account-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 5px;
+    }
+
+    .account-bank {
+        font-size: 13px;
+        color: #718096;
+    }
+
+    .account-details {
+        background: #f7fafc;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 13px;
+    }
+
+    .detail-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .detail-label {
+        color: #718096;
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .account-balance {
+        font-size: 28px;
+        font-weight: bold;
+        color: #48bb78;
+        margin: 15px 0;
+    }
+
+    .account-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px solid #f0f0f0;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-state-icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+
+    .empty-state h3 {
+        color: #4a5568;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: #a0aec0;
+        margin-bottom: 25px;
+    }
+</style>
+
+<div style="max-width: 1400px; margin: 0 auto;">
+    <div class="accounts-header">
+        <h1>🏦 Contas Bancárias</h1>
+        <a href="{{ url_for('super_admin.financial_account_new') }}" class="btn-new-category">
+            <span>➕</span>
+            <span>Nova Conta</span>
+        </a>
+    </div>
+
+    {% if accounts %}
+    <!-- Card de Saldo Total -->
+    <div class="total-balance-card">
+        <div class="total-balance-label">💰 Saldo Total em Contas</div>
+        <h2 class="total-balance-value">
+            R$ {{ "{:,.2f}".format(total_balance).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+        </h2>
+    </div>
+
+    <!-- Grid de Contas -->
+    <div class="accounts-grid">
+        {% for account in accounts %}
+        <div class="account-card">
+            <div class="account-icon">🏦</div>
+
+            <div class="account-name">{{ account.name }}</div>
+            <div class="account-bank">{{ account.bank_name or 'Banco não informado' }}</div>
+
+            <div class="account-details">
+                <div class="detail-row">
+                    <span class="detail-label">Agência:</span>
+                    <span class="detail-value">{{ account.agency or '-' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Conta:</span>
+                    <span class="detail-value">{{ account.account_number or '-' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tipo:</span>
+                    <span class="detail-value">{{ account.account_type|title }}</span>
+                </div>
+            </div>
+
+            <div class="account-balance">
+                {{ account.formatted_balance }}
+            </div>
+
+            <div class="account-actions">
+                <a href="{{ url_for('super_admin.financial_account_edit', account_id=account.id) }}"
+                    class="btn btn-sm btn-primary" style="flex: 1;">
+                    ✏️ Editar
+                </a>
+                <form method="POST"
+                    action="{{ url_for('super_admin.financial_account_delete', account_id=account.id) }}"
+                    style="flex: 1;" onsubmit="return confirm('Excluir conta {{ account.name }}?')">
+                    <button type="submit" class="btn btn-sm btn-danger" style="width: 100%;">
+                        🗑️ Excluir
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Estado Vazio -->
+    <div class="empty-state">
+        <div class="empty-state-icon">🏦</div>
+        <h3>Nenhuma conta bancária cadastrada</h3>
+        <p>Comece adicionando suas contas para gerenciar as finanças</p>
+        <a href="{{ url_for('super_admin.financial_account_new') }}" class="btn-new-category">
+            <span>➕</span>
+            <span>Adicionar Primeira Conta</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

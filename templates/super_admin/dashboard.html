@@ -1,0 +1,107 @@
+{% extends "super_admin/base.html" %}
+
+{% block title %}Dashboard - Super Admin{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom: 30px;">📊 Dashboard Geral</h1>
+
+<div class="stats-grid">
+    <div class="stat-card primary">
+        <h3>Total de Tenants</h3>
+        <div class="value">{{ total_tenants }}</div>
+    </div>
+
+    <div class="stat-card success">
+        <h3>Tenants Ativos</h3>
+        <div class="value">{{ active_tenants }}</div>
+    </div>
+
+    <div class="stat-card warning">
+        <h3>Em Trial</h3>
+        <div class="value">{{ trial_tenants }}</div>
+    </div>
+
+    <div class="stat-card info">
+        <h3>Receita Mensal</h3>
+        <div class="value">R$ {{ "%.2f"|format(monthly_revenue) }}</div>
+    </div>
+</div>
+
+{% if expiring_trials %}
+<div class="card">
+    <h2>⚠️ Trials Expirando em Breve</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Tenant</th>
+                <th>Email</th>
+                <th>Dias Restantes</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tenant in expiring_trials %}
+            <tr>
+                <td><strong>{{ tenant.subdomain }}</strong></td>
+                <td>{{ tenant.contact_email }}</td>
+                <td>
+                    <span class="badge badge-warning">{{ tenant.trial_days_remaining }} dias</span>
+                </td>
+                <td>
+                    <a href="{{ url_for('super_admin.tenant_detail', tenant_id=tenant.id) }}" class="btn btn-primary"
+                        style="font-size: 12px; padding: 6px 12px;">Ver Detalhes</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h2>🆕 Tenants Recentes</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Subdomínio</th>
+                <th>Empresa</th>
+                <th>Plano</th>
+                <th>Status</th>
+                <th>Criado em</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tenant in recent_tenants %}
+            <tr>
+                <td><strong>{{ tenant.subdomain }}</strong></td>
+                <td>{{ tenant.company_name }}</td>
+                <td>
+                    {% if tenant.subscription %}
+                    {{ tenant.subscription.plan_type }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if tenant.is_active %}
+                    {% if tenant.is_trial %}
+                    <span class="badge badge-warning">Trial</span>
+                    {% else %}
+                    <span class="badge badge-success">Ativo</span>
+                    {% endif %}
+                    {% else %}
+                    <span class="badge badge-danger">Inativo</span>
+                    {% endif %}
+                </td>
+                <td>{{ tenant.created_at.strftime('%d/%m/%Y %H:%M') if tenant.created_at else '-' }}</td>
+                <td>
+                    <a href="{{ url_for('super_admin.tenant_detail', tenant_id=tenant.id) }}" class="btn btn-primary"
+                        style="font-size: 12px; padding: 6px 12px;">Ver</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

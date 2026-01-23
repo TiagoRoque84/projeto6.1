@@ -1,0 +1,381 @@
+/* static/css/responsive.css */
+/* CSS Global de Responsividade para Todo o Sistema */
+
+/* ============================================
+   UNIVERSAL - Todas as Resoluções
+   ============================================ */
+
+/* Reset e Base */
+* {
+    box-sizing: border-box;
+}
+
+/* Scroll suave em todo o sistema */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Body responsivo */
+body {
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Transições suaves globais */
+a,
+button,
+.btn,
+.card,
+input,
+select,
+textarea {
+    transition: all 0.3s ease;
+}
+
+/* Containers fluidos */
+.container,
+[style*="max-width"] {
+    max-width: 100%;
+    width: 100%;
+    padding: 0 20px;
+}
+
+/* Garantir que imagens sejam responsivas */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* ============================================
+   DESKTOP GRANDE (1920px+)
+   ============================================ */
+@media (min-width: 1920px) {
+
+    .container,
+    [style*="max-width: 1200px"],
+    [style*="max-width: 1400px"],
+    [style*="max-width: 1600px"] {
+        max-width: 1800px !important;
+        margin: 0 auto;
+    }
+
+    .financial-grid,
+    .summary-cards {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    .categories-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .accounts-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* ============================================
+   DESKTOP MÉDIO (1366px - 1919px)
+   ============================================ */
+@media (min-width: 1366px) and (max-width: 1919px) {
+
+    .container,
+    [style*="max-width"] {
+        max-width: 1400px !important;
+        margin: 0 auto;
+    }
+
+    .financial-grid,
+    .summary-cards {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    .accounts-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* ============================================
+   LAPTOP (1024px - 1365px)
+   ============================================ */
+@media (min-width: 1024px) and (max-width: 1365px) {
+
+    .container,
+    [style*="max-width"] {
+        max-width: 1200px !important;
+        margin: 0 auto;
+    }
+
+    .financial-grid,
+    .summary-cards {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .accounts-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Tabelas responsivas */
+@media (max-width: 768px) {
+
+    /* Container principal */
+    .container,
+    [style*="max-width"] {
+        padding: 0 15px !important;
+        margin: 20px auto !important;
+    }
+
+    /* Headers */
+    h1 {
+        font-size: 24px !important;
+    }
+
+    h2 {
+        font-size: 20px !important;
+    }
+
+    /* Grids para mobile */
+    .financial-grid,
+    .summary-cards,
+    .categories-grid,
+    .accounts-grid,
+    [style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    /* Flex para mobile */
+    [style*="display: flex"] {
+        flex-wrap: wrap !important;
+    }
+
+    /* Headers com botões */
+    .transactions-header,
+    .admins-header,
+    .accounts-header,
+    .categories-header,
+    [style*="justify-content: space-between"] {
+        flex-direction: column !important;
+        gap: 15px !important;
+        align-items: stretch !important;
+    }
+
+    /* Botões full width no mobile */
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-new-category,
+    a[class*="btn"] {
+        width: 100% !important;
+        text-align: center !important;
+        padding: 12px 20px !important;
+    }
+
+    /* Tabelas responsivas */
+    table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        font-size: 13px;
+    }
+
+    table th,
+    table td {
+        padding: 10px 8px !important;
+    }
+
+    /* Cards */
+    .card,
+    .form-card,
+    .stat-card {
+        margin-bottom: 15px;
+        padding: 20px !important;
+    }
+
+    /* Formulários */
+    .form-row,
+    .row,
+    [class*="row"] {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    .form-control,
+    .form-select,
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+        /* Evita zoom no iOS */
+    }
+
+    /* Type selector (Receita/Despesa) */
+    .type-selector {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Filtros */
+    .filter-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .filter-btn {
+        width: 100% !important;
+        margin-bottom: 5px !important;
+    }
+
+    /* Navigation menu */
+    nav,
+    .navbar nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px !important;
+    }
+
+    nav a,
+    .navbar a {
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+        flex: 1 1 auto;
+        text-align: center;
+    }
+
+    /* Ações de tabela */
+    .action-buttons {
+        flex-direction: column !important;
+        gap: 5px !important;
+    }
+
+    .action-buttons button,
+    .action-buttons form {
+        width: 100% !important;
+    }
+
+    /* Login page */
+    .login-container {
+        padding: 20px !important;
+    }
+
+    /* Tenant detail sections */
+    .section-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Color picker */
+    .color-picker-group {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    /* Dashboard stats */
+    .summary-card {
+        padding: 20px !important;
+    }
+
+    .summary-value,
+    .stat-value {
+        font-size: 24px !important;
+    }
+
+    /* Form actions */
+    .form-actions {
+        flex-direction: column !important;
+    }
+
+    .form-actions .btn,
+    .form-actions a {
+        width: 100% !important;
+    }
+
+    /* Badges and tags */
+    .badge {
+        font-size: 11px !important;
+        padding: 3px 8px !important;
+    }
+
+    /* Category cards */
+    .category-card {
+        padding: 15px !important;
+    }
+
+    /* Account cards */
+    .account-card {
+        padding: 20px !important;
+    }
+
+    /* Transaction amount */
+    .transaction-amount {
+        font-size: 14px !important;
+    }
+
+    /* Modals e overlays */
+    [role="dialog"],
+    .modal {
+        width: 95% !important;
+        margin: 10px auto !important;
+    }
+}
+
+/* Tablets (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+    .financial-grid,
+    .summary-cards {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .categories-grid,
+    .accounts-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* Touch improvements */
+@media (hover: none) and (pointer: coarse) {
+
+    /* Aumentar área de toque */
+    button,
+    a,
+    input[type="submit"],
+    input[type="button"] {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Remover hover effects em touch devices */
+    *:hover {
+        transform: none !important;
+    }
+}
+
+/* Landscape mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+
+    .navbar,
+    nav {
+        padding: 10px 15px !important;
+    }
+
+    h1 {
+        font-size: 20px !important;
+    }
+}
+
+/* Print styles */
+@media print {
+
+    .navbar,
+    nav,
+    .btn,
+    button,
+    [type="button"] {
+        display: none !important;
+    }
+
+    table {
+        page-break-inside: avoid;
+    }
+}

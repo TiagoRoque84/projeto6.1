@@ -1,0 +1,280 @@
+{% extends 'super_admin/base.html' %}
+
+{% block title %}Categorias Financeiras - Super Admin{% endblock %}
+
+{% block content %}
+<style>
+    .categories-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+    }
+
+    .categories-header h1 {
+        font-size: 32px;
+        color: #2d3748;
+        margin: 0;
+    }
+
+    .categories-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 30px;
+    }
+
+    .category-section {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .section-header h2 {
+        font-size: 24px;
+        margin: 0;
+    }
+
+    .section-header .count {
+        background: #f7fafc;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        color: #718096;
+        font-weight: 600;
+    }
+
+    .category-card {
+        background: #fafafa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .category-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background: white;
+    }
+
+    .category-icon {
+        font-size: 36px;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .category-info {
+        flex: 1;
+    }
+
+    .category-name {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 5px;
+    }
+
+    .category-name strong {
+        font-size: 16px;
+        color: #2d3748;
+    }
+
+    .color-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .category-description {
+        font-size: 13px;
+        color: #718096;
+    }
+
+    .category-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .action-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .action-btn.edit {
+        background: #e6f2ff;
+        color: #2563eb;
+    }
+
+    .action-btn.edit:hover {
+        background: #2563eb;
+        color: white;
+    }
+
+    .action-btn.delete {
+        background: #fee;
+        color: #dc2626;
+    }
+
+    .action-btn.delete:hover {
+        background: #dc2626;
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #a0aec0;
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .btn-new-category {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-new-category:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+        color: white;
+    }
+</style>
+
+<div style="max-width: 1400px; margin: 0 auto;">
+    <div class="categories-header">
+        <h1>📊 Categorias Financeiras</h1>
+        <a href="{{ url_for('super_admin.financial_category_new') }}" class="btn-new-category">
+            <span>➕</span>
+            <span>Nova Categoria</span>
+        </a>
+    </div>
+
+    <div class="categories-grid">
+        <!-- Receitas -->
+        <div class="category-section">
+            <div class="section-header">
+                <h2 style="color: #48bb78;">💰 Receitas</h2>
+                <span class="count">{{ receitas|length }} categorias</span>
+            </div>
+
+            {% if receitas %}
+            {% for cat in receitas %}
+            <div class="category-card">
+                <div class="category-icon">{{ cat.icon }}</div>
+                <div class="category-info">
+                    <div class="category-name">
+                        <span class="color-dot" style="background: {{ cat.color }};"></span>
+                        <strong>{{ cat.name }}</strong>
+                    </div>
+                    <div class="category-description">
+                        {{ cat.description or 'Sem descrição' }}
+                    </div>
+                </div>
+                <div class="category-actions">
+                    <a href="{{ url_for('super_admin.financial_category_edit', category_id=cat.id) }}"
+                        class="action-btn edit" title="Editar">
+                        ✏️
+                    </a>
+                    <form method="POST"
+                        action="{{ url_for('super_admin.financial_category_delete', category_id=cat.id) }}"
+                        style="display: inline;" onsubmit="return confirm('Excluir categoria {{ cat.name }}?')">
+                        <button type="submit" class="action-btn delete" title="Excluir">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <p>Nenhuma categoria de receita cadastrada</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Despesas -->
+        <div class="category-section">
+            <div class="section-header">
+                <h2 style="color: #e53e3e;">📤 Despesas</h2>
+                <span class="count">{{ despesas|length }} categorias</span>
+            </div>
+
+            {% if despesas %}
+            {% for cat in despesas %}
+            <div class="category-card">
+                <div class="category-icon">{{ cat.icon }}</div>
+                <div class="category-info">
+                    <div class="category-name">
+                        <span class="color-dot" style="background: {{ cat.color }};"></span>
+                        <strong>{{ cat.name }}</strong>
+                    </div>
+                    <div class="category-description">
+                        {{ cat.description or 'Sem descrição' }}
+                    </div>
+                </div>
+                <div class="category-actions">
+                    <a href="{{ url_for('super_admin.financial_category_edit', category_id=cat.id) }}"
+                        class="action-btn edit" title="Editar">
+                        ✏️
+                    </a>
+                    <form method="POST"
+                        action="{{ url_for('super_admin.financial_category_delete', category_id=cat.id) }}"
+                        style="display: inline;" onsubmit="return confirm('Excluir categoria {{ cat.name }}?')">
+                        <button type="submit" class="action-btn delete" title="Excluir">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📤</div>
+                <p>Nenhuma categoria de despesa cadastrada</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

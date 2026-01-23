@@ -1,27 +1,66 @@
-
 {% extends 'base.html' %}
 {% block content %}
 <h3>Configurações</h3>
+
 <form method="post" enctype="multipart/form-data" class="mb-4">
   {{ form.hidden_tag() }}
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Logo (sidebar)</label>
-      {{ form.logo_sidebar(class_='form-control') }}
-      <div class="mt-2 p-2 border rounded bg-white">
-        <div class="small text-muted">Prévia atual</div>
-        <img src="{{ url_for('static', filename='img/logo.png') }}" style="max-height:80px">
-      </div>
-    </div>
-    <div class="col-md-6 mb-3">
-      <label class="form-label">Logo (tela de login)</label>
-      {{ form.logo_login(class_='form-control') }}
-      <div class="mt-2 p-2 border rounded bg-white">
-        <div class="small text-muted">Prévia atual</div>
-        <img src="{{ url_for('static', filename='img/logo-login.png') }}" style="max-height:120px">
+
+  <!-- E-mails de Alertas -->
+  <div class="card mb-4" style="border-left: 4px solid #4299e1;">
+    <div class="card-body">
+      <h5 class="card-title">📧 E-mails de Alertas</h5>
+      <p class="text-muted small mb-3">
+        Configure os e-mails que receberão alertas de documentos vencidos ou próximos do vencimento.
+      </p>
+
+      <div class="mb-3">
+        <label class="form-label fw-bold">E-mails (separar múltiplos por ponto e vírgula)</label>
+        {{ form.alert_emails(class_='form-control', placeholder='admin@empresa.com;financeiro@empresa.com') }}
+        <div class="form-text">
+          <strong>Exemplo:</strong> admin@empresa.com;gerente@empresa.com<br>
+          Os e-mails receberão notificações sobre:
+          <ul class="mb-0 mt-1">
+            <li>Documentos vencidos</li>
+            <li>Documentos a vencer em 7 dias</li>
+            <li>Documentos a vencer em 30 dias</li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
-  <button class="btn btn-primary">Salvar</button>
+
+  <!-- Logos -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">🎨 Personalização Visual</h5>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Logo (sidebar)</label>
+          {{ form.logo_sidebar(class_='form-control') }}
+          <div class="mt-2 p-2 border rounded bg-white">
+            <div class="small text-muted">Prévia atual</div>
+            <img src="{{ url_for('static', filename='img/logo.png') }}" style="max-height:80px" alt="Logo sidebar">
+          </div>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Logo (tela de login)</label>
+          {{ form.logo_login(class_='form-control') }}
+          <div class="mt-2 p-2 border rounded bg-white">
+            <div class="small text-muted">Prévia atual</div>
+            <img src="{{ url_for('static', filename='img/logo-login.png') }}" style="max-height:120px" alt="Logo login">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-lg">
+    <i class="bi bi-save"></i> Salvar Configurações
+  </button>
 </form>
+
+<div class="alert alert-info">
+  <strong>💡 Dica:</strong> Para que os alertas funcionem, é necessário configurar o servidor SMTP no sistema.
+  Entre em contato com o suporte se os e-mails não estiverem sendo enviados.
+</div>
 {% endblock %}

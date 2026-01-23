@@ -1,26 +1,58 @@
-# Ambientes virtuais (as pastas pesadas)
+# Arquivos e pastas que NÃO devem ir para GitHub
+# (senhas, banco de dados, bibliotecas)
+
+# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
 venv/
 .venv/
 env/
+ENV/
 
-# Bytecode do Python (lixo)
-__pycache__/
-*.py[cod]
+# Banco de Dados
+*.db
+*.sqlite
+*.sqlite3
+saas_app.db
 
-# Arquivos de ambiente e senhas (SEGURANÇA!)
+# Arquivos de Configuração com Senhas
 .env
 .env.local
-senha.txt
-instance/
+.env.production
 
-# Arquivos de sistema e IDE
+# Uploads de Usuários
+uploads/
+static/uploads/
+
+# Logs
+*.log
+logs/
+
+# IDEs
 .vscode/
 .idea/
-*.log
+*.swp
+*.swo
+*~
 
-# Arquivos zipados de backup
-*.zip
-*.rar
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Uploads de usuários (opcional, mas recomendado)
-uploads/
+# Temporários
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Build
+build/
+dist/
+*.egg-info/

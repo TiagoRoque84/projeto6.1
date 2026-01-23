@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-danger">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <h1 style="font-size: 100px; color: #dc3545; font-weight: bold;">404</h1>
+                    </div>
+
+                    <h2 class="text-danger mb-3">Página Não Encontrada</h2>
+
+                    <p class="lead mb-4">
+                        Ops! A página que você está procurando não existe.
+                    </p>
+
+                    <div class="alert alert-info mb-4">
+                        <p class="mb-0">
+                            A página pode ter sido movida, removida ou o link pode estar incorreto.
+                        </p>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                            <i class="bi bi-house-door"></i> Ir para Início
+                        </a>
+                        <button onclick="window.history.back()" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

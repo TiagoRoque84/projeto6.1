@@ -1,0 +1,350 @@
+{% extends "super_admin/base.html" %}
+
+{% block title %}{{ tenant.subdomain }} - Detalhes - Super Admin{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h1>{{ tenant.company_name }}</h1>
+    <div>
+        <a href="{{ url_for('super_admin.tenant_edit', tenant_id=tenant.id) }}" class="btn btn-primary">✏️ Editar</a>
+        <form method="POST" action="{{ url_for('super_admin.tenant_toggle_status', tenant_id=tenant.id) }}"
+            style="display: inline;">
+            {% if tenant.is_active %}
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Desativar este tenant?')">🔒
+                Desativar</button>
+            {% else %}
+            <button type="submit" class="btn btn-success" onclick="return confirm('Ativar este tenant?')">✓
+                Ativar</button>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+    <div>
+        <div class="card">
+            <h2>Informações Gerais</h2>
+            <table style="width: 100%">
+                <tr>
+                    <td style="font-weight: 600; width: 200px;">Subdomínio:</td>
+                    <td>{{ tenant.subdomain }}.{{ config.BASE_DOMAIN }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Empresa:</td>
+                    <td>{{ tenant.company_name }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Responsável:</td>
+                    <td>{{ tenant.contact_name }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Email:</td>
+                    <td>{{ tenant.contact_email }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Telefone:</td>
+                    <td>{{ tenant.contact_phone or '-' }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Criado em:</td>
+                    <td>{{ tenant.created_at.strftime('%d/%m/%Y %H:%M') if tenant.created_at else '-' }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Usuários ({{ users|length }})</h2>
+            {% if users %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Nome</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.nome_completo }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>
+                            {% if user.active %}
+                            <span class="badge badge-success">Ativo</span>
+                            {% else %}
+                            <span class="badge badge-danger">Inativo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: #999; text-align: center; padding: 20px;">Nenhum usuário cadastrado.</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Empresas Cadastradas ({{ companies|length }})</h2>
+            {% if companies %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Razão Social</th>
+                        <th>CNPJ</th>
+                        <th>Cidade</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                    <tr>
+                        <td>{{ company.razao_social }}</td>
+                        <td>{{ company.cnpj }}</td>
+                        <td>{{ company.cidade }}/{{ company.uf }}</td>
+                        <td>
+                            {% if company.ativa %}
+                            <span class="badge badge-success">Ativa</span>
+                            {% else %}
+                            <span class="badge badge-danger">Inativa</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color: #999; text-align: center; padding: 20px;">Nenhuma empresa cadastrada.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div>
+        <!-- Trial Management Card -->
+        <div class="card">
+            <h2>🎯 Gerenciamento de Trial</h2>
+            {% if tenant.is_trial %}
+            <p style="margin-bottom: 15px; font-size: 14px;">
+                <strong>Trial ativo:</strong> {{ tenant.trial_days_remaining }} dias restantes
+            </p>
+
+            <!-- Estender Trial -->
+            <form method="POST" action="{{ url_for('super_admin.tenant_extend_trial', tenant_id=tenant.id) }}"
+                style="margin-bottom: 15px;">
+                <div style="display: flex; gap: 10px; align-items: end;">
+                    <div style="flex: 1;">
+                        <label for="days" style="font-size: 13px; font-weight: 600;">Adicionar dias:</label>
+                        <input type="number" name="days" id="days" value="7" min="1" max="365"
+                            style="width: 100%; padding: 8px; border: 2px solid #e0e0e0; border-radius: 5px;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="font-size: 13px; padding: 8px 15px;">
+                        + Estender
+                    </button>
+                </div>
+            </form>
+
+            <div style="display: flex; gap: 10px;">
+                <!-- Converter para Pago -->
+                <form method="POST" action="{{ url_for('super_admin.tenant_convert_to_paid', tenant_id=tenant.id) }}"
+                    style="flex: 1;">
+                    <button type="submit" class="btn btn-success"
+                        style="font-size: 13px; padding: 8px 15px; width: 100%;"
+                        onclick="return confirm('Converter trial para plano pago?')">
+                        ✓ Converter
+                    </button>
+                </form>
+
+                <!-- Cancelar Trial -->
+                <form method="POST" action="{{ url_for('super_admin.tenant_cancel_trial', tenant_id=tenant.id) }}"
+                    style="flex: 1;">
+                    <button type="submit" class="btn btn-danger"
+                        style="font-size: 13px; padding: 8px 15px; width: 100%;"
+                        onclick="return confirm('ATENÇÃO: Isso cancelará o trial e DESATIVARÁ o tenant. Continuar?')">
+                        ✗ Cancelar
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <p style="color: #666; font-size: 14px;">Este tenant não está em trial.</p>
+            {% endif %}
+        </div>
+
+        <!-- Email Alertas Card -->
+        <div class="card">
+            <h2>📧 E-mail de Alertas</h2>
+            <form method="POST" action="{{ url_for('super_admin.tenant_update_alert_email', tenant_id=tenant.id) }}">
+                <div style="margin-bottom: 15px;">
+                    <label for="alert_email" style="font-size: 13px; font-weight: 600;">E-mails (separar por ;):</label>
+                    <input type="text" name="alert_email" id="alert_email" value="{{ tenant.alert_email or '' }}"
+                        placeholder="admin@empresa.com;financeiro@empresa.com"
+                        style="width: 100%; padding: 8px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 13px;">
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                        Estes e-mails receberão alertas de documentos vencidos
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-primary" style="font-size: 13px; padding: 8px 15px;">
+                    💾 Salvar
+                </button>
+            </form>
+        </div>
+
+        <!-- Status Card -->
+        <div class="card">
+            <h2>Status</h2>
+            <div style="margin-bottom: 15px;">
+                {% if tenant.is_active %}
+                <span class="badge badge-success" style="font-size: 14px; padding: 8px 15px;">✓ Ativo</span>
+                {% else %}
+                <span class="badge badge-danger" style="font-size: 14px; padding: 8px 15px;">🔒 Inativo</span>
+                {% endif %}
+
+                {% if tenant.is_trial %}
+                <span class="badge badge-warning" style="font-size: 14px; padding: 8px 15px; margin-left: 10px;">
+                    Trial - {{ tenant.trial_days_remaining }}d restantes
+                </span>
+                {% endif %}
+            </div>
+
+            {% if tenant.subscription %}
+            <h3 style="margin-top: 20px; margin-bottom: 10px; color: #667eea;">Assinatura</h3>
+            <table style="width: 100%; font-size: 14px;">
+                <tr>
+                    <td style="font-weight: 600;">Plano:</td>
+                    <td>{{ tenant.subscription.plan_type }}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Preço:</td>
+                    <td>R$ {{ "%.2f"|format(tenant.subscription.price) }}/mês</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Status:</td>
+                    <td>{{ tenant.subscription.status }}</td>
+                </tr>
+            </table>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Uso de Recursos</h2>
+            <table style="width: 100%; font-size: 14px;">
+                <tr>
+                    <td style="font-weight: 600;">Empresas:</td>
+                    <td>
+                        {{ usage.companies }} / {{ tenant.max_companies }}
+                        {% if usage.companies >= tenant.max_companies %}
+                        <span class="badge badge-danger">Limite</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Usuários:</td>
+                    <td>
+                        {{ usage.users }} / {{ tenant.max_users }}
+                        {% if usage.users >= tenant.max_users %}
+                        <span class="badge badge-danger">Limite</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if tenant.max_employees > 0 %}
+                <tr>
+                    <td style="font-weight: 600;">Funcionários:</td>
+                    <td>
+                        {{ usage.employees }} / {{ tenant.max_employees }}
+                        {% if usage.employees >= tenant.max_employees %}
+                        <span class="badge badge-danger">Limite</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td style="font-weight: 600;">Armazenamento:</td>
+                    <td>{{ tenant.storage_limit_gb }}GB</td>
+                </tr>
+            </table>
+
+            {% if not within_limits %}
+            <div class="alert alert-error" style="margin-top: 15px; font-size: 13px;">
+                ⚠️ {{ limit_message }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h2>Módulos Habilitados</h2>
+            <ul style="list-style: none; font-size: 14px;">
+                {% for feature in tenant.features %}
+                <li style="padding: 5px 0;">
+                    {% if feature.is_enabled %}
+                    <span style="color: #48bb78;">✓</span>
+                    {% else %}
+                    <span style="color: #ccc;">○</span>
+                    {% endif %}
+                    {{ feature.feature_code }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+<!-- Seção de Pagamentos -->
+<div class="card" style="margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>💰 Pagamentos e Faturas</h2>
+        <a href="{{ url_for('super_admin.create_payment', tenant_id=tenant.id) }}" class="btn btn-primary">
+            + Nova Fatura
+        </a>
+    </div>
+
+    {% if payments %}
+    <table>
+        <thead>
+            <tr>
+                <th>Nº Fatura</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td><code>{{ payment.invoice_number }}</code></td>
+                <td>{{ payment.description }}</td>
+                <td><strong>R$ {{ "%.2f"|format(payment.amount) }}</strong></td>
+                <td>{{ payment.due_date.strftime('%d/%m/%Y') }}</td>
+                <td>
+                    {% if payment.status == 'paid' %}
+                    <span class="badge badge-success">✓ Pago</span>
+                    {% elif payment.is_overdue %}
+                    <span class="badge badge-danger">⚠ Vencido</span>
+                    {% else %}
+                    <span class="badge badge-warning">Pendente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if payment.status == 'pending' %}
+                    <form method="POST" action="{{ url_for('super_admin.mark_payment_paid', payment_id=payment.id) }}"
+                        style="display: inline-block;">
+                        <button type="submit" class="btn btn-success btn-sm">
+                            ✓ Dar Baixa
+                        </button>
+                    </form>
+                    {% else %}
+                    <span style="color: #999;">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color: #999; text-align: center; padding: 30px;">
+        Nenhuma fatura registrada. Clique em "Nova Fatura" para criar a primeira.
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

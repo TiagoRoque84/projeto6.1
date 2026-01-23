@@ -1,0 +1,90 @@
+{% extends 'super_admin/base.html' %}
+{% block title %}Gerenciar Super Admins{% endblock %}
+{% block content %}
+<style>
+    .admins-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .admins-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .protected-badge {
+        background: #fbbf24;
+        color: #78350f;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+</style>
+
+<div style="max-width: 1200px; margin: 0 auto;">
+    <div class="admins-header">
+        <h1 style="font-size: 32px; color: #2d3748; margin: 0;">👥 Super Admins</h1>
+        <a href="{{ url_for('super_admin.superadmin_new') }}" class="btn btn-primary"
+            style="padding: 12px 24px; border-radius: 8px; text-decoration: none;">
+            ➕ Novo Super Admin
+        </a>
+    </div>
+
+    <div class="admins-table">
+        <table style="width: 100%;">
+            <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <tr>
+                    <th style="padding: 16px; text-align: left;">Usuário</th>
+                    <th>Nome Completo</th>
+                    <th>Email</th>
+                    <th>Criado em</th>
+                    <th>Status</th>
+                    <th style="width: 200px;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in admins %}
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 16px;">
+                        <strong>{{ admin.username }}</strong>
+                        {% if admin.username == 'superadmin' %}
+                        <span class="protected-badge">🔒 PROTEGIDO</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ admin.nome_completo or '-' }}</td>
+                    <td>{{ admin.email or '-' }}</td>
+                    <td>{{ admin.created_at.strftime('%d/%m/%Y') if admin.created_at else '-' }}</td>
+                    <td>
+                        {% if admin.is_active %}
+                        <span class="badge badge-success">✓ Ativo</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 6px;">
+                            {% if admin.username != 'superadmin' %}
+                            <a href="{{ url_for('super_admin.superadmin_edit', admin_id=admin.id) }}"
+                                class="btn btn-sm btn-primary">✏️ Editar</a>
+                            <form method="POST"
+                                action="{{ url_for('super_admin.superadmin_delete', admin_id=admin.id) }}"
+                                style="display: inline;" onsubmit="return confirm('Excluir este super admin?')">
+                                <button class="btn btn-sm btn-danger">🗑️</button>
+                            </form>
+                            {% else %}
+                            <span style="color: #a0aec0; font-size: 12px;">Conta protegida</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

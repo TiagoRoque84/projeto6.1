@@ -1,0 +1,234 @@
+{% extends 'super_admin/base.html' %}
+{% block title %}Dashboard Financeiro{% endblock %}
+{% block content %}
+<style>
+    .financial-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-card.primary {
+        border-left: 4px solid #667eea;
+    }
+
+    .stat-card.success {
+        border-left: 4px solid #48bb78;
+    }
+
+    .stat-card.danger {
+        border-left: 4px solid #e53e3e;
+    }
+
+    .stat-card.info {
+        border-left: 4px solid #4299e1;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #718096;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #2d3748;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 20px;
+    }
+
+    .category-bar {
+        background: #f7fafc;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .category-icon {
+        font-size: 24px;
+    }
+
+    .category-info {
+        flex: 1;
+    }
+
+    .category-name {
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .category-amount {
+        font-size: 14px;
+        color: #718096;
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        transition: width 0.3s;
+    }
+</style>
+
+<div style="max-width: 1600px; margin: 0 auto;">
+    <h1 style="font-size: 32px; color: #2d3748; margin-bottom: 30px;">📊 Dashboard Financeiro</h1>
+
+    <!-- Cards Principais -->
+    <div class="financial-grid">
+        <div class="stat-card primary">
+            <div class="stat-label">💰 Saldo Total</div>
+            <div class="stat-value" style="color: #667eea;">
+                R$ {{ "{:,.2f}".format(total_balance).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+            </div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-label">📈 Receitas (Mês)</div>
+            <div class="stat-value" style="color: #48bb78;">
+                R$ {{ "{:,.2f}".format(receitas_mes).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+            </div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-label">📉 Despesas (Mês)</div>
+            <div class="stat-value" style="color: #e53e3e;">
+                R$ {{ "{:,.2f}".format(despesas_mes).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+            </div>
+        </div>
+        <div class="stat-card {% if saldo_mes >= 0 %}success{% else %}danger{% endif %}">
+            <div class="stat-label">💵 Saldo do Mês</div>
+            <div class="stat-value" style="color: {% if saldo_mes >= 0 %}#48bb78{% else %}#e53e3e{% endif %};">
+                R$ {{ "{:,.2f}".format(saldo_mes).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div class="card">
+            <h3 class="section-title">💰 Top 5 Receitas por Categoria</h3>
+            {% if receitas_by_category %}
+            {% set max_receita = receitas_by_category[0].total %}
+            {% for cat in receitas_by_category %}
+            <div class="category-bar">
+                <div class="category-icon">{{ cat.icon }}</div>
+                <div class="category-info">
+                    <div class="category-name">{{ cat.name }}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"
+                            style="width: {{ (cat.total / max_receita * 100)|int }}%; background: {{ cat.color }};">
+                        </div>
+                    </div>
+                </div>
+                <div class="category-amount">
+                    <strong>R$ {{ "{:,.2f}".format(cat.total).replace(',', 'X').replace('.', ',').replace('X', '.')
+                        }}</strong>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p style="text-align: center; color: #a0aec0; padding: 40px;">Nenhuma receita registrada este mês</p>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <h3 class="section-title">📤 Top 5 Despesas por Categoria</h3>
+            {% if despesas_by_category %}
+            {% set max_despesa = despesas_by_category[0].total %}
+            {% for cat in despesas_by_category %}
+            <div class="category-bar">
+                <div class="category-icon">{{ cat.icon }}</div>
+                <div class="category-info">
+                    <div class="category-name">{{ cat.name }}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill"
+                            style="width: {{ (cat.total / max_despesa * 100)|int }}%; background: {{ cat.color }};">
+                        </div>
+                    </div>
+                </div>
+                <div class="category-amount">
+                    <strong>R$ {{ "{:,.2f}".format(cat.total).replace(',', 'X').replace('.', ',').replace('X', '.')
+                        }}</strong>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p style="text-align: center; color: #a0aec0; padding: 40px;">Nenhuma despesa registrada este mês</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+        <div class="card">
+            <h3 class="section-title">🕒 Últimas Transações</h3>
+            {% if recent_transactions %}
+            <table style="width: 100%;">
+                <thead>
+                    <tr style="background: #f7fafc;">
+                        <th style="padding: 12px; text-align: left;">Tipo</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in recent_transactions[:8] %}
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 12px;">
+                            {% if t.type == 'receita' %}💰{% else %}📤{% endif %}
+                        </td>
+                        <td>{{ t.description }}</td>
+                        <td><strong>{{ t.formatted_amount }}</strong></td>
+                        <td>
+                            {% if t.status == 'paid' %}
+                            <span class="badge badge-success">Pago</span>
+                            {% else %}
+                            <span class="badge badge-warning">Pendente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="text-align: center; color: #a0aec0; padding: 40px;">Nenhuma transação registrada</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="card" style="margin-bottom: 20px;">
+                <h3 class="section-title">📥 A Receber (30 dias)</h3>
+                <div style="font-size: 28px; font-weight: bold; color: #48bb78;">
+                    R$ {{ "{:,.2f}".format(a_receber).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+                </div>
+            </div>
+            <div class="card">
+                <h3 class="section-title">📤 A Pagar (30 dias)</h3>
+                <div style="font-size: 28px; font-weight: bold; color: #e53e3e;">
+                    R$ {{ "{:,.2f}".format(a_pagar).replace(',', 'X').replace('.', ',').replace('X', '.') }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

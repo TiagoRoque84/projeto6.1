@@ -21,15 +21,52 @@ class AuditLog(db.Model):
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     username = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), default="admin")
     active = db.Column(db.Boolean, default=True)
     nome_completo = db.Column(db.String(200), default="")
-    def get_id(self): return str(self.id)
+    
+    # Permissões (JSON) - Admin sempre tem todas
+    permissions = db.Column(db.Text, default='{}')
+    
+    def get_id(self): 
+        return str(self.id)
+    
+    def has_permission(self, permission_code):
+        """Verifica se o usuário tem uma permissão específica"""
+        if self.role == 'admin':
+            return True
+        import json
+        try:
+            perms = json.loads(self.permissions or '{}')
+            return perms.get(permission_code, False)
+        except:
+            return False
+    
+    def get_permissions_dict(self):
+        """Retorna dicionário de permissões"""
+        import json
+        try:
+            return json.loads(self.permissions or '{}')
+        except:
+            return {}
+    
+    def set_permissions(self, permissions_dict):
+        """Define permissões a partir de um dicionário"""
+        import json
+        self.permissions = json.dumps(permissions_dict)
 
 class Company(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     razao_social = db.Column(db.String(200), nullable=False)
     nome_fantasia = db.Column(db.String(200), default="")
     cnpj = db.Column(db.String(20), unique=True)
@@ -52,6 +89,10 @@ class Funcao(db.Model):
 
 class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     company_id = db.Column(db.Integer, db.ForeignKey("company.id"))
     funcao_id = db.Column(db.Integer, db.ForeignKey("funcao.id"))
     ativo = db.Column(db.Boolean, default=True)
@@ -99,10 +140,18 @@ class Employee(db.Model):
 
 class DocumentType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     nome = db.Column(db.String(120), nullable=False)
 
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     company_id = db.Column(db.Integer, db.ForeignKey("company.id"))
     tipo_id = db.Column(db.Integer, db.ForeignKey("document_type.id"))
     descricao = db.Column(db.String(200))
@@ -152,6 +201,10 @@ class CashMovement(db.Model):
 
 class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     tipo_pessoa = db.Column(db.String(2), default='PF')
     nome_razao_social = db.Column(db.String(200), nullable=False)
     cpf_cnpj = db.Column(db.String(20), unique=False, nullable=True)
@@ -170,6 +223,10 @@ class Customer(db.Model):
 class Fornecedor(db.Model):
     __tablename__ = 'fornecedor'
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     nome = db.Column(db.String(200), nullable=False)
     cnpj = db.Column(db.String(20), unique=True)
     epis = db.relationship('EPI', backref='fornecedor', lazy=True)
@@ -177,6 +234,10 @@ class Fornecedor(db.Model):
 class EPI(db.Model):
     __tablename__ = 'epi'
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy  
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     nome = db.Column(db.String(200), nullable=False)
     ca = db.Column(db.String(50))
     fornecedor_id = db.Column(db.Integer, db.ForeignKey('fornecedor.id'), nullable=True)
@@ -210,11 +271,19 @@ class MovimentacaoEPI(db.Model):
 class Servico(db.Model):
     __tablename__ = 'servico'
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     nome = db.Column(db.String(150), nullable=False, unique=True)
 
 class Agendamento(db.Model):
     __tablename__ = 'agendamento'
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)
     servico_id = db.Column(db.Integer, db.ForeignKey('servico.id'), nullable=False)
     data_hora = db.Column(db.DateTime, nullable=False)
@@ -228,6 +297,10 @@ class Agendamento(db.Model):
 class Proposal(db.Model):
     __tablename__ = 'proposal'
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     issuing_company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
     attention = db.Column(db.String(200))
@@ -258,6 +331,10 @@ class ProposalItem(db.Model):
 class Vehicle(db.Model):
     __tablename__ = 'vehicle'
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Multi-tenancy
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenant.id'), nullable=True, index=True)
+    
     nome = db.Column(db.String(150), nullable=False)
     descricao = db.Column(db.String(300))
     placa = db.Column(db.String(10), unique=True, nullable=False)

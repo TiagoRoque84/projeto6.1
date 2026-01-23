@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <h2>💳 Minha Assinatura</h2>
+
+    <!-- Status da Conta -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Status da Conta</h5>
+
+            {% if tenant.is_trial %}
+            <div class="alert alert-info">
+                <h6><strong>🎁 Período de Teste</strong></h6>
+                <p class="mb-1">Você está utilizando a versão trial do sistema.</p>
+                <p class="mb-0">
+                    <strong>Tempo restante:</strong> {{ trial_days_remaining }} dia{% if trial_days_remaining != 1 %}s{%
+                    endif %}
+                </p>
+                {% if tenant.trial_ends_at %}
+                <p class="mb-0">
+                    <strong>Data de expiração:</strong> {{ tenant.trial_ends_at.strftime('%d/%m/%Y') }}
+                </p>
+                {% endif %}
+            </div>
+            {% elif payment_status == 'active' %}
+            <div class="alert alert-success">
+                <h6><strong>✅ Assinatura Ativa</strong></h6>
+                <p class="mb-0">Sua assinatura está em dia e todos os recursos estão disponíveis.</p>
+            </div>
+            {% elif payment_status == 'cancelled' %}
+            <div class="alert alert-danger">
+                <h6><strong>❌ Assinatura Cancelada</strong></h6>
+                <p class="mb-0">Sua assinatura foi cancelada. Entre em contato com o suporte.</p>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <h6><strong>⚠️ Status Desconhecido</strong></h6>
+                <p class="mb-0">Entre em contato com o suporte para verificar sua assinatura.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Detalhes do Plano -->
+    {% if subscription %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">📦 Plano Atual</h5>
+
+            <table class="table table-borderless">
+                <tbody>
+                    <tr>
+                        <td style="width: 200px;"><strong>Plano:</strong></td>
+                        <td>{{ subscription.plan_type|title }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Valor Mensal:</strong></td>
+                        <td>R$ {{ "%.2f"|format(subscription.price) }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ciclo de Cobrança:</strong></td>
+                        <td>{{ subscription.billing_cycle or 'Mensal' }}</td>
+                    </tr>
+                    {% if subscription.current_period_start %}
+                    <tr>
+                        <td><strong>Período Atual:</strong></td>
+                        <td>
+                            {{ subscription.current_period_start.strftime('%d/%m/%Y') }}
+                            {% if subscription.current_period_end %}
+                            até {{ subscription.current_period_end.strftime('%d/%m/%Y') }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% if subscription.next_billing_date and not tenant.is_trial %}
+                    <tr>
+                        <td><strong>Próxima Cobrança:</strong></td>
+                        <td>{{ subscription.next_billing_date.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Limites do Plano -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">📊 Recursos e Limites</h5>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Recurso</th>
+                        <th>Uso Atual</th>
+                        <th>Limite</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Empresas</td>
+                        <td>{{ usage.companies if usage else 0 }}</td>
+                        <td>{{ tenant.max_companies }}</td>
+                        <td>
+                            {% if usage and usage.companies >= tenant.max_companies %}
+                            <span class="badge bg-danger">Limite Atingido</span>
+                            {% else %}
+                            <span class="badge bg-success">OK</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Usuários</td>
+                        <td>{{ usage.users if usage else 0 }}</td>
+                        <td>{{ tenant.max_users }}</td>
+                        <td>
+                            {% if usage and usage.users >= tenant.max_users %}
+                            <span class="badge bg-danger">Limite Atingido</span>
+                            {% else %}
+                            <span class="badge bg-success">OK</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if tenant.max_employees > 0 %}
+                    <tr>
+                        <td>Funcionários</td>
+                        <td>{{ usage.employees if usage else 0 }}</td>
+                        <td>{{ tenant.max_employees }}</td>
+                        <td>
+                            {% if usage and usage.employees >= tenant.max_employees %}
+                            <span class="badge bg-danger">Limite Atingido</span>
+                            {% else %}
+                            <span class="badge bg-success">OK</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td>Armazenamento</td>
+                        <td>-</td>
+                        <td>{{ tenant.storage_limit_gb }}GB</td>
+                        <td><span class="badge bg-success">OK</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Histórico de Pagamentos -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">💰 Extrato de Pagamentos</h5>
+
+            {% if payments %}
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Fatura</th>
+                        <th>Descrição</th>
+                        <th>Vencimento</th>
+                        <th>Pago em</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments[:10] %}
+                    <tr>
+                        <td>{{ payment.invoice_number }}</td>
+                        <td>{{ payment.description }}</td>
+                        <td>{{ payment.due_date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ payment.paid_at.strftime('%d/%m/%Y') if payment.paid_at else '-' }}</td>
+                        <td>{{ payment.formatted_amount }}</td>
+                        <td>
+                            {% if payment.status == 'paid' %}
+                            <span class="badge bg-success">Pago</span>
+                            {% elif payment.is_overdue %}
+                            <span class="badge bg-danger">Vencida</span>
+                            {% else %}
+                            <span class="badge bg-warning">Pendente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if payments|length > 10 %}
+            <p class="text-muted small">Mostrando os últimos 10 pagamentos de {{ payments|length }} no total.</p>
+            {% endif %}
+            {% else %}
+            <p class="text-muted">Nenhum histórico de pagamento disponível ainda.</p>
+            <p class="small text-muted">As faturas aparecerão aqui conforme forem geradas.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Contato -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">📞 Precisa de Ajuda?</h5>
+            <p>Entre em contato conosco para:</p>
+            <ul>
+                <li>Fazer upgrade do seu plano</li>
+                <li>Adicionar recursos extras</li>
+                <li>Esclarecer dúvidas sobre pagamento</li>
+                <li>Solicitar cancelamento</li>
+            </ul>
+            <p class="mb-0">
+                <strong>Suporte:</strong> suporte@seudominio.com
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
